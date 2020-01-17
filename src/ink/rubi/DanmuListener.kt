@@ -5,7 +5,6 @@ import PacketHead
 import RoomInit
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.sun.javafx.util.Utils
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
@@ -17,23 +16,20 @@ import io.ktor.client.features.websocket.DefaultClientWebSocketSession
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-import java.util.zip.InflaterOutputStream
 
 
 const val HEADER_LENGTH = 16
-const val uid = 3220953
-//const val id = 958282
-const val room = 6
+const val uid = 0
 //const val WEBSOCKET_PATH = "wss://broadcastlv.chat.bilibili.com:2245/sub"
 const val WEBSOCKET_PATH = "wss://tx-gz-live-comet-11.chat.bilibili.com/sub"
-const val ROOM_INIT_URL = "https://api.live.bilibili.com/room/v1/Room/room_init?id=$room"
+const val ROOM_INIT_URL = "https://api.live.bilibili.com/room/v1/Room/room_init"
 const val DANMU_SERVER_CONF_URL = "https://api.live.bilibili.com/room/v1/Danmu/getConf"
 val log: Logger = LoggerFactory.getLogger("[danmu-client]")
 val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
@@ -44,18 +40,21 @@ object DanmuFetcher {
     @KtorExperimentalAPI
     @JvmStatic
     fun main(args: Array<String>) = runBlocking {
+        println("输入 直播间号码:")
+        val roomId = readLine()!!.toInt()
+
         val client = HttpClient(CIO) {
             install(WebSockets)
             install(JsonFeature) {
                 serializer = JacksonSerializer()
             }
             install(Logging) {
-                level = LogLevel.ALL
+                level = LogLevel.NONE
             }
             BrowserUserAgent()
         }
-        val roomId = client.roomInfo().data.room_id
-        log.info("room id => $roomId")
+        val realRoomId = client.roomInfo(roomId).data.room_id
+        log.info("room id => $realRoomId")
         client.wss(
             urlString = WEBSOCKET_PATH
         ) {
@@ -68,13 +67,13 @@ object DanmuFetcher {
             log.info("login ....")
             login(uid, roomId)
             while (true) {
-                heartBeat(uid, roomId)
+                heartBeat()
                 delay(25000)
             }
         }
     }
 
-    private suspend fun DefaultClientWebSocketSession.heartBeat(uid: Int, roomId: Int) {
+    private suspend fun DefaultClientWebSocketSession.heartBeat() {
         send(Frame.Binary(true, heartBeatPacket()))
         flush()
     }
@@ -109,8 +108,10 @@ object DanmuFetcher {
         decode(buffer)
     }
 
-    private suspend fun HttpClient.roomInfo(): RoomInit {
-        return this.get(ROOM_INIT_URL)
+    private suspend fun HttpClient.roomInfo(roomId: Int): RoomInit {
+        return this.get(ROOM_INIT_URL) {
+            parameter("id",roomId)
+        }
     }
 
     private fun buildAuthPacket(uid: Int, roomId: Int): ByteArray {
@@ -151,7 +152,7 @@ object DanmuFetcher {
                 if (head.version == Version.WS_BODY_PROTOCOL_VERSION_DEFLATE.version) {
                     val raw = ByteArray(buffer.remaining())
                     buffer.get(raw)
-                    decode(ByteBuffer.wrap(uncompress(raw)))
+                    decode(ByteBuffer.wrap(uncompressZlib(raw)))
                     return
                 }
                 assert(head.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL.version)
@@ -173,16 +174,21 @@ object DanmuFetcher {
             CMD.DANMU_MSG.name -> {
                 val said = json["info"][1].textValue()!!
                 val who = json["info"][2][1].textValue()!!
-                log.info("[${who}] : ${said}")
+                log.info("[$who] : $said")
             }
             CMD.SEND_GIFT.name -> {
-                log.info("[${Utils.convertUnicode(json["data"]["uname"].textValue())}] 送出了 ${json["data"]["num"].intValue()} 个 [${Utils.convertUnicode(json["data"]["giftName"].textValue())}]")
+                val who = unescapeUnicode(json["data"]["uname"].textValue())!!
+                val num = json["data"]["num"].intValue()
+                val gift = unescapeUnicode(json["data"]["giftName"].textValue())!!
+                log.info("[$who] 送出了 $num 个 [$gift]")
             }
-            CMD.WELCOME.name ->{
-                log.info("[${json["data"]["uname"].textValue()}] 进入了直播间")
+            CMD.WELCOME.name -> {
+                val who = json["data"]["uname"].textValue()!!
+                log.info("[$who] 进入了直播间")
             }
-            CMD.WELCOME_GUARD.name ->{
-                log.info("[舰长][${json["data"]["username"].textValue()}] 进入了直播间")
+            CMD.WELCOME_GUARD.name -> {
+                val who = json["data"]["username"].textValue()!!
+                log.info("[舰长][$who] 进入了直播间")
             }
             else -> {
                 log.warn(message)
@@ -190,13 +196,4 @@ object DanmuFetcher {
         }
     }
 }
-fun uncompress(input: ByteArray): ByteArray {
-    val byteArrayOutputStream = ByteArrayOutputStream()
-    val inflaterOutputStream = InflaterOutputStream(byteArrayOutputStream)
-    inflaterOutputStream.write(input)
-    inflaterOutputStream.close()
-    return byteArrayOutputStream.toByteArray()
-}
-
-
 
