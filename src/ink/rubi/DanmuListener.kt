@@ -5,7 +5,7 @@ import PacketHead
 import RoomInit
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.sun.javafx.util.Utils
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
@@ -24,7 +24,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-import java.util.zip.Inflater
+import java.util.zip.InflaterOutputStream
+
 
 const val HEADER_LENGTH = 16
 const val uid = 3220953
@@ -142,7 +143,6 @@ object DanmuFetcher {
         when (head.code) {
             Operation.HEARTBEAT_REPLY.code -> log.info("heart beat packet")
             Operation.AUTH_REPLY.code -> {
-                log.info("login success")
                 val body = ByteArray(buffer.remaining())
                 buffer.get(body)
                 log.info("response => ${body.toString(Charsets.UTF_8)}")
@@ -167,37 +167,36 @@ object DanmuFetcher {
 
     private fun handleMessage(message: String) {
         log.debug(message)
-        val cmd = objectMapper.readTree(message)["cmd"]?.textValue() ?: throw Exception("wrong json , missing cmd ")
+        val json = objectMapper.readTree(message)
+        val cmd = json["cmd"]?.textValue() ?: throw Exception("wrong json , missing cmd ")
         when (cmd) {
             CMD.DANMU_MSG.name -> {
-                val danmu = objectMapper.readValue<DanmuMessage>(message)
-                val said = danmu.info[1] as String
-                val who = (danmu.info[2] as List<*>)[1] as String
-                log.info("[${who}]:${said}")
+                val said = json["info"][1].textValue()!!
+                val who = json["info"][2][1].textValue()!!
+                log.info("[${who}] : ${said}")
+            }
+            CMD.SEND_GIFT.name -> {
+                log.info("[${Utils.convertUnicode(json["data"]["uname"].textValue())}] 送出了 ${json["data"]["num"].intValue()} 个 [${Utils.convertUnicode(json["data"]["giftName"].textValue())}]")
+            }
+            CMD.WELCOME.name ->{
+                log.info("[${json["data"]["uname"].textValue()}] 进入了直播间")
+            }
+            CMD.WELCOME_GUARD.name ->{
+                log.info("[舰长][${json["data"]["username"].textValue()}] 进入了直播间")
+            }
+            else -> {
+                log.warn(message)
             }
         }
-//        log.info(message)
     }
+}
+fun uncompress(input: ByteArray): ByteArray {
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    val inflaterOutputStream = InflaterOutputStream(byteArrayOutputStream)
+    inflaterOutputStream.write(input)
+    inflaterOutputStream.close()
+    return byteArrayOutputStream.toByteArray()
 }
 
-data class DanmuMessage(
-    val cmd: String,
-    val info: List<Any>
-)
-fun uncompress(input: ByteArray): ByteArray {
-    val bos = ByteArrayOutputStream()
-    val decompressor = Inflater()
-    try {
-        decompressor.setInput(input)
-        val buf = ByteArray(2048)
-        while (!decompressor.finished()) {
-            val count = decompressor.inflate(buf)
-            bos.write(buf, 0, count)
-        }
-    } finally {
-        decompressor.end()
-    }
-    return bos.toByteArray()
-}
 
 

@@ -44,10 +44,6 @@ data class PacketHead(
     val seq: Int = 1 //sequence，可以取常数1
 )
 
-
-
-
-
 data class AuthInfo(
     val uid: Int,//0表示未登录，否则为用户ID
     val roomid: Int,//房间ID
@@ -56,11 +52,4 @@ data class AuthInfo(
     val type: Int = 2,
     val protover: Int = 2
 //    val key: String = "kI2b1G7RD8DBQs4312ZsLKdWNz2k4yijKKc5NoPBAUNpAxEaC6ai2hKUYVDtCzLGU687Z1NMfCn1IkbDo_75iQq8bq_5N8VJWmZPIGb6MnEedFHJHccG"
-)
-
-
-
-data class Message(
-    val cmd: String,
-    val info: List<Any>
 )

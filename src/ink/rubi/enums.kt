@@ -25,6 +25,7 @@ enum class Operation(val code: Int) {
     UNREGISTER(16),
     UNREGISTER_REPLY(17),
 }
+
 enum class CMD(val desc:String){
     DANMU_MSG("收到弹幕"),
     ROOM_REAL_TIME_MESSAGE_UPDATE("?"),
@@ -97,8 +98,8 @@ enum class CMD(val desc:String){
 //    'USER_TOAST_MSG',
 //    'WARNING',
 //    'WEEK_STAR_CLOCK',
-//    'WELCOME',
-//    'WELCOME_GUARD',
+    WELCOME("进入直播间"),
+    WELCOME_GUARD("进入直播间"),
 //    'WIN_ACTIVITY',
 //    'WISH_BOTTLE'
 
