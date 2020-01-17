@@ -3,6 +3,9 @@ package ink.rubi
 import java.io.ByteArrayOutputStream
 import java.util.zip.InflaterOutputStream
 
+/**
+ * copy from [com.sun.javafx.util.Utils]#convertUnicode()
+ */
 fun unescapeUnicode(src: String): String? {
     val buflen: Int
     var ch: Char
@@ -27,7 +30,7 @@ fun unescapeUnicode(src: String): String? {
                     if (limit < buflen) {
                         val c = ch
                         val result = Character.digit(c, 16)
-                        if (result >= 0 && c.toInt() > 0x7f) { //lexError(pos+1, "illegal.nonascii.digit");
+                        if (result >= 0 && c.toInt() > 0x7f) {
                             ch = "0123456789abcdef"[result]
                         }
                         var d = result
@@ -37,7 +40,7 @@ fun unescapeUnicode(src: String): String? {
                             ch = buf[bp]
                             val c1 = ch
                             val result1 = Character.digit(c1, 16)
-                            if (result1 >= 0 && c1.toInt() > 0x7f) { //lexError(pos+1, "illegal.nonascii.digit");
+                            if (result1 >= 0 && c1.toInt() > 0x7f) {
                                 ch = "0123456789abcdef"[result1]
                             }
                             d = result1
@@ -48,7 +51,6 @@ fun unescapeUnicode(src: String): String? {
                             unicodeConversionBp = bp
                         }
                     }
-                    //lexError(bp, "illegal.unicode.esc");
                 } else {
                     bp--
                     ch = '\\'
