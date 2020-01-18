@@ -169,4 +169,4 @@ Connected to the target VM, address: '127.0.0.1:0', transport: 'socket'
 Disconnected from the target VM, address: '127.0.0.1:0', transport: 'socket'
 ```
 
-🍺🍺
+🍻
