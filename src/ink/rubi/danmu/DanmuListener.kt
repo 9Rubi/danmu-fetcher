@@ -7,8 +7,6 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.logging.LogLevel
-import io.ktor.client.features.logging.Logging
 import io.ktor.client.features.websocket.DefaultClientWebSocketSession
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
@@ -41,9 +39,6 @@ object DanmuListener {
             install(WebSockets)
             install(JsonFeature) {
                 serializer = JacksonSerializer()
-            }
-            install(Logging) {
-                level = LogLevel.NONE
             }
             BrowserUserAgent()
         }
