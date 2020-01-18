@@ -1,4 +1,5 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import tanvd.kosogor.proxy.publishJar
+import tanvd.kosogor.proxy.shadowJar
 
 val logback_version: String by project
 val ktor_version: String by project
@@ -7,9 +8,8 @@ val apache_commons_lang3: String by project
 
 
 plugins {
-    `maven-publish`
-    kotlin("jvm") version "1.3.61"
-    id("com.github.johnrengelman.shadow") version "5.0.0"
+    kotlin("jvm") version "1.3.61" apply true
+    id("tanvd.kosogor") version "1.0.6" apply true
 }
 
 group = "ink.rubi"
@@ -42,46 +42,14 @@ kotlin.sourceSets["test"].kotlin.srcDirs("test")
 sourceSets["main"].resources.srcDirs("resources")
 sourceSets["test"].resources.srcDirs("testresources")
 
-val shadowJar: ShadowJar by tasks
-/*
-tasks.withType<ShadowJar>{
-    manifest.attributes.apply {
-        put("Implementation-Title", "just for practise")
-        put("Implementation-Version", archiveVersion.get())
-        put("Main-Class", "Test")
+publishJar{
+    publication{
+        artifactId = rootProject.name
     }
 }
-*/
-
-shadowJar.apply {
-    manifest.attributes.apply {
-        put("Implementation-Title", "just for practise")
-        put("Implementation-Version", archiveVersion.get())
-        put("Main-Class", "Test")
-    }
-    archiveBaseName.set(project.name + "-shadow")
-}
-
-val sourcesJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("sources")
-    from(sourceSets.main.get().allSource)
-}
-val allInOne by tasks.registering(ShadowJar::class) {
-    archiveClassifier.set("all")
-    from(shadowJar)
-}
-publishing {
-    repositories {
-        maven {
-            url = uri("$buildDir/repo")
-        }
-    }
-    publications {
-        register("mavenJava", MavenPublication::class) {
-//            dependsOn(":shadowJar")
-            from(components["java"])
-            artifact(sourcesJar.get())
-            artifact(allInOne.get())
-        }
+shadowJar {
+    jar {
+        archiveName = "test.jar"
+//        mainClass = "tanvd.example.MainKt"
     }
 }
