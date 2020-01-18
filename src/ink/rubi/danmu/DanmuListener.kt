@@ -1,8 +1,5 @@
-package ink.rubi
+package ink.rubi.danmu
 
-import AuthInfo
-import PacketHead
-import RoomInit
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.client.HttpClient
@@ -34,15 +31,12 @@ const val DANMU_SERVER_CONF_URL = "https://api.live.bilibili.com/room/v1/Danmu/g
 val log: Logger = LoggerFactory.getLogger("[danmu-client]")
 val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
 
-object DanmuFetcher {
+object DanmuListener {
     @FlowPreview
     @ExperimentalCoroutinesApi
     @KtorExperimentalAPI
     @JvmStatic
-    fun main(args: Array<String>) = runBlocking {
-        println("输入 直播间号码:")
-        val roomId = readLine()!!.toInt()
-
+    fun doFetchDanmu(roomId: Int, block: (cmd: String, rawJson: String) -> Unit) = runBlocking {
         val client = HttpClient(CIO) {
             install(WebSockets)
             install(JsonFeature) {
@@ -55,17 +49,13 @@ object DanmuFetcher {
         }
         val realRoomId = client.roomInfo(roomId).data.room_id
         log.info("room id => $realRoomId")
-        client.wss(
-            urlString = WEBSOCKET_PATH
-        ) {
-            log.info("main ${Thread.currentThread().name} ")
+        client.wss(WEBSOCKET_PATH) {
             launch {
-                while (true) {
-                    handlePacket(incoming.receive().buffer)
-                }
+                while (true)
+                    decode(incoming.receive().buffer, block)
             }
             log.info("login ....")
-            login(uid, roomId)
+            login(uid, realRoomId)
             while (true) {
                 heartBeat()
                 delay(25000)
@@ -104,13 +94,9 @@ object DanmuFetcher {
         flush()
     }
 
-    private fun handlePacket(buffer: ByteBuffer) {
-        decode(buffer)
-    }
-
     private suspend fun HttpClient.roomInfo(roomId: Int): RoomInit {
         return this.get(ROOM_INIT_URL) {
-            parameter("id",roomId)
+            parameter("id", roomId)
         }
     }
 
@@ -137,7 +123,7 @@ object DanmuFetcher {
         return buffer.array()
     }
 
-    private fun decode(buffer: ByteBuffer) {
+    private fun decode(buffer: ByteBuffer, block: (cmd: String, rawJson: String) -> Unit) {
         val head = with(buffer) {
             PacketHead(int, short, short, int, int)
         }
@@ -152,48 +138,22 @@ object DanmuFetcher {
                 if (head.version == Version.WS_BODY_PROTOCOL_VERSION_DEFLATE.version) {
                     val raw = ByteArray(buffer.remaining())
                     buffer.get(raw)
-                    decode(ByteBuffer.wrap(uncompressZlib(raw)))
+                    decode(ByteBuffer.wrap(uncompressZlib(raw)), block)
                     return
                 }
                 assert(head.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL.version)
                 val byteArray = ByteArray(head.packLength - head.headLength)
                 buffer.get(byteArray)
-                handleMessage(byteArray.toString(Charsets.UTF_8))
+                val message = byteArray.toString(Charsets.UTF_8)
+                log.debug(message)
+                val cmd = objectMapper.readTree(message)["cmd"]?.textValue() ?: throw Exception("wrong json , missing [cmd] !")
+                block(cmd, message)
                 if (buffer.hasRemaining())
-                    decode(buffer)
+                    decode(buffer, block)
             }
             else -> log.warn("code => ${Operation.values().first { i -> i.code == head.code }.name} !!!!!")
         }
     }
 
-    private fun handleMessage(message: String) {
-        log.debug(message)
-        val json = objectMapper.readTree(message)
-        val cmd = json["cmd"]?.textValue() ?: throw Exception("wrong json , missing cmd ")
-        when (cmd) {
-            CMD.DANMU_MSG.name -> {
-                val said = json["info"][1].textValue()!!
-                val who = json["info"][2][1].textValue()!!
-                log.info("[$who] : $said")
-            }
-            CMD.SEND_GIFT.name -> {
-                val who = unescapeUnicode(json["data"]["uname"].textValue())!!
-                val num = json["data"]["num"].intValue()
-                val gift = unescapeUnicode(json["data"]["giftName"].textValue())!!
-                log.info("[$who] 送出了 $num 个 [$gift]")
-            }
-            CMD.WELCOME.name -> {
-                val who = json["data"]["uname"].textValue()!!
-                log.info("[$who] 进入了直播间")
-            }
-            CMD.WELCOME_GUARD.name -> {
-                val who = json["data"]["username"].textValue()!!
-                log.info("[舰长][$who] 进入了直播间")
-            }
-            else -> {
-                log.warn(message)
-            }
-        }
-    }
 }
 

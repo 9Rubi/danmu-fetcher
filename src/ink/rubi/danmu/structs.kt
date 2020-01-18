@@ -1,3 +1,5 @@
+package ink.rubi.danmu
+
 data class RoomInit(
     val code: Int,
     val `data`: Data,
