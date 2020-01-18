@@ -1,10 +1,19 @@
-import ink.rubi.danmu.*
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import ink.rubi.danmu.CMD
+import ink.rubi.danmu.DanmuListener
+import ink.rubi.danmu.unescapeUnicode
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+val log: Logger = LoggerFactory.getLogger("[test]")
+val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
+
 
 object Main {
-
     @KtorExperimentalAPI
     @FlowPreview
     @ExperimentalCoroutinesApi
