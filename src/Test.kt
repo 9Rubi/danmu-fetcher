@@ -2,7 +2,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import ink.rubi.danmu.CMD
 import ink.rubi.danmu.DanmuListener
-import ink.rubi.danmu.unescapeUnicode
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -13,7 +12,7 @@ val log: Logger = LoggerFactory.getLogger("[test]")
 val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
 
 
-object Main {
+object Test {
     @KtorExperimentalAPI
     @FlowPreview
     @ExperimentalCoroutinesApi
@@ -30,9 +29,9 @@ object Main {
                     log.info("[$who] : $said")
                 }
                 CMD.SEND_GIFT.name -> {
-                    val who = unescapeUnicode(json["data"]["uname"].textValue())!!
+                    val who = json["data"]["uname"].textValue()!!
                     val num = json["data"]["num"].intValue()
-                    val gift = unescapeUnicode(json["data"]["giftName"].textValue())!!
+                    val gift = json["data"]["giftName"].textValue()!!
                     log.info("[$who] 送出了 $num 个 [$gift]")
                 }
                 CMD.WELCOME.name -> {
