@@ -1,5 +1,4 @@
-import tanvd.kosogor.proxy.publishJar
-import tanvd.kosogor.proxy.shadowJar
+import tanvd.kosogor.proxy.*
 
 val logback_version: String by project
 val ktor_version: String by project
@@ -7,14 +6,14 @@ val kotlin_version: String by project
 
 plugins {
     kotlin("jvm") version "1.3.61" apply true
-    id("tanvd.kosogor") version "1.0.6" apply true
+    id("tanvd.kosogor") version "1.0.7" apply true
 }
 
 group = "ink.rubi"
-version = "0.0.1"
+version = "0.0.11"
 
 repositories {
-    mavenLocal()
+    mavenCentral()
     jcenter()
     maven { url = uri("https://kotlin.bintray.com/ktor") }
     maven { url = uri("https://kotlin.bintray.com/kotlinx") }
@@ -30,7 +29,6 @@ dependencies {
     api("io.ktor:ktor-websockets:$ktor_version")
     api("io.ktor:ktor-client-websockets:$ktor_version")
     api("io.ktor:ktor-client-logging-jvm:$ktor_version")
-    api("ch.qos.logback:logback-classic:$logback_version")
 }
 
 kotlin.sourceSets["main"].kotlin.srcDirs("src")
@@ -42,5 +40,15 @@ sourceSets["test"].resources.srcDirs("testresources")
 publishJar{
     publication{
         artifactId = rootProject.name
+    }
+    bintray {
+        repository = "for-fun"
+        info {
+            publish = false
+            githubRepo = "https://github.com/9Rubi/danmu-fetcher.git"
+            vcsUrl = "https://github.com/9Rubi/danmu-fetcher.git"
+            userOrg = "9rubi"
+            license = "MIT"
+        }
     }
 }

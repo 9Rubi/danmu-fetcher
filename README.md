@@ -1,25 +1,45 @@
 # kotlin 实现的弹幕姬
 
-```
-gradlew/gradlew.bat build
-```
-
 ## 使用示例
-```kotlin
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import ink.rubi.danmu.CMD
-import ink.rubi.danmu.DanmuListener
-import ink.rubi.danmu.unescapeUnicode
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+```xml
+<project>
+    <repositories>
+        <repository>
+            <id>bintray-9rubi-for-fun</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/9rubi/for-fun</url>
+        </repository>
+    </repositories>
+    
+    <dependencies>
+        <dependency>
+          <groupId>ink.rubi</groupId>
+          <artifactId>danmu-fetcher</artifactId>
+          <version>0.0.11</version>
+        </dependency>
+<!--         日志实现 -->
+    </dependencies>
+</project>
+```
+```groovy
+repositories {
+    maven {
+        url  "https://dl.bintray.com/9rubi/danmu-fetcher"
+    }
+}
 
+dependencies{
+    compile 'ink.rubi:danmu-fetcher:0.0.11'
+    compile 'ch.qos.logback:logback-classic:1.2.1'
+}
+```
+
+
+
+## kotlin
+```kotlin
 val log: Logger = LoggerFactory.getLogger("[test]")
 val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
-
 
 object Main {
     @KtorExperimentalAPI
@@ -56,6 +76,21 @@ object Main {
                 }
             }
         }
+    }
+}
+```
+
+## use java
+```java
+public class Test {
+    public static void main(String[] args) {
+        int roomId = Integer.parseInt(new Scanner(System.in).nextLine());
+        DanmuListener.doFetchDanmu(roomId,(cmd, json) -> {
+            System.out.println(json);
+            //就不写两遍了
+            return Unit.INSTANCE;
+        });
+
     }
 }
 ```
