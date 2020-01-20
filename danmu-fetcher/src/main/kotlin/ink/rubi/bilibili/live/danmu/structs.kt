@@ -1,13 +1,13 @@
-package ink.rubi.danmu
+package ink.rubi.bilibili.live.danmu
 
 data class RoomInit(
     val code: Int,
-    val `data`: Data,
+    val `data`: DataRoomInit,
     val message: String,
     val msg: String
 )
 
-data class Data(
+data class DataRoomInit(
     val encrypted: Boolean,
     val hidden_till: Int,
     val is_hidden: Boolean,
@@ -25,6 +25,38 @@ data class Data(
     val special_type: Int,
     val uid: Int
 )
+
+
+data class LoadBalanceInfo(
+    val code: Int,
+    val `data`: DataLoadBalanceInfo,
+    val message: String,
+    val msg: String
+)
+
+data class DataLoadBalanceInfo(
+    val host: String,
+    val host_server_list: List<HostServer>,
+    val max_delay: Int,
+    val port: Int,
+    val refresh_rate: Int,
+    val refresh_row_factor: Double,
+    val server_list: List<Server>,
+    val token: String
+)
+
+data class HostServer(
+    val host: String,
+    val port: Int,
+    val ws_port: Int,
+    val wss_port: Int
+)
+
+data class Server(
+    val host: String,
+    val port: Int
+)
+
 
 //封包格式
 //封包由头部和数据组成，字节序均为大端模式
@@ -55,6 +87,3 @@ data class AuthInfo(
     val protover: Int = 2
 //    val key: String = "kI2b1G7RD8DBQs4312ZsLKdWNz2k4yijKKc5NoPBAUNpAxEaC6ai2hKUYVDtCzLGU687Z1NMfCn1IkbDo_75iQq8bq_5N8VJWmZPIGb6MnEedFHJHccG"
 )
-
-fun main() {
-}

@@ -6,4 +6,4 @@
 *.ipr
 *.iws
 resources/
-test/
+src/test/

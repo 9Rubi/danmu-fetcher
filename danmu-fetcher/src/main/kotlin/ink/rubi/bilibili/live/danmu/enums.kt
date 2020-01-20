@@ -1,4 +1,4 @@
-package ink.rubi.danmu
+package ink.rubi.bilibili.live.danmu
 
 enum class Version(val version: Short) {
     WS_BODY_PROTOCOL_VERSION_NORMAL(0),

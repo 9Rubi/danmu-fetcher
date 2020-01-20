@@ -1,4 +1,4 @@
-package ink.rubi.danmu
+package ink.rubi.bilibili.live.danmu
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -18,44 +18,50 @@ import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
+import kotlin.random.Random
 
 
 const val HEADER_LENGTH = 16
 const val uid = 0
-//const val WEBSOCKET_PATH = "wss://broadcastlv.chat.bilibili.com:2245/sub"
-const val WEBSOCKET_PATH = "wss://tx-gz-live-comet-11.chat.bilibili.com/sub"
 const val ROOM_INIT_URL = "https://api.live.bilibili.com/room/v1/Room/room_init"
-const val DANMU_SERVER_CONF_URL = "https://api.live.bilibili.com/room/v1/Danmu/getConf"
+const val ROOM_LOAD_BALANCE_URL = "https://api.live.bilibili.com/room/v1/Danmu/getConf"
 val log: Logger = LoggerFactory.getLogger("[danmu-client]")
 val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
+@KtorExperimentalAPI
+val client = HttpClient(CIO) {
+    install(WebSockets)
+    install(JsonFeature) {
+        serializer = JacksonSerializer()
+    }
+    BrowserUserAgent()
+}
 
+@ExperimentalCoroutinesApi
 object DanmuListener {
-    @FlowPreview
-    @ExperimentalCoroutinesApi
     @KtorExperimentalAPI
-    @JvmStatic
-    fun doFetchDanmu(roomId: Int, block: (cmd: String, rawJson: String) -> Unit) = runBlocking {
-        val client = HttpClient(CIO) {
-            install(WebSockets)
-            install(JsonFeature) {
-                serializer = JacksonSerializer()
-            }
-            BrowserUserAgent()
-        }
-        val realRoomId = client.roomInfo(roomId).data.room_id
-        log.info("room id => $realRoomId")
-        client.wss(WEBSOCKET_PATH) {
+    fun CoroutineScope.receiveDanmu(roomId: Int, handler: () -> MessageTypeHandler) = launch {
+        val realRoomId = client.getRealRoomIdAsync(roomId)
+        val hostServer = client.getLoadBalancedWsHostServerAsync(roomId)
+
+        awaitAndLog(realRoomId, hostServer)
+        val handlerImpl = handler()
+        client.wss(host = hostServer.getCompleted().host, port = hostServer.getCompleted().wss_port, path = "/sub") {
             launch {
                 while (true)
-                    decode(incoming.receive().buffer, block)
+                    decode(incoming.receive().buffer, handlerImpl)
             }
-            log.info("login ....")
-            login(uid, realRoomId)
+            log.info("login ....")//0228
+            login(uid, realRoomId.getCompleted())
             while (true) {
                 heartBeat()
                 delay(25000)
             }
         }
+    }
+
+    private suspend fun awaitAndLog(realRoomId: Deferred<Int>, hostServer: Deferred<HostServer>) {
+        log.info("room id => ${realRoomId.await()}")
+        log.info("use        ${hostServer.await().host}")
     }
 
     private suspend fun DefaultClientWebSocketSession.heartBeat() {
@@ -89,11 +95,24 @@ object DanmuListener {
         flush()
     }
 
-    private suspend fun HttpClient.roomInfo(roomId: Int): RoomInit {
-        return this.get(ROOM_INIT_URL) {
-            parameter("id", roomId)
+    private fun HttpClient.getRealRoomIdAsync(roomId: Int): Deferred<Int> {
+        return async {
+            this@getRealRoomIdAsync.get<RoomInit>(ROOM_INIT_URL) {
+                parameter("id", roomId)
+            }.data.room_id
         }
     }
+
+    private fun HttpClient.getLoadBalancedWsHostServerAsync(roomId: Int): Deferred<HostServer> {
+        return async {
+            this@getLoadBalancedWsHostServerAsync.get<LoadBalanceInfo>(ROOM_LOAD_BALANCE_URL) {
+                parameter("room_id", roomId)
+                parameter("platform", "pc")
+                parameter("player", "web")
+            }.data.host_server_list[Random.nextInt(0, 3)]
+        }
+    }
+
 
     private fun buildAuthPacket(uid: Int, roomId: Int): ByteArray {
         val info = AuthInfo(uid = uid, roomid = roomId)
@@ -118,7 +137,7 @@ object DanmuListener {
         return buffer.array()
     }
 
-    private fun decode(buffer: ByteBuffer, block: (cmd: String, rawJson: String) -> Unit) {
+    private fun decode(buffer: ByteBuffer, messageTypeHandler: MessageTypeHandler) {
         val head = with(buffer) {
             PacketHead(int, short, short, int, int)
         }
@@ -133,7 +152,7 @@ object DanmuListener {
                 if (head.version == Version.WS_BODY_PROTOCOL_VERSION_DEFLATE.version) {
                     val raw = ByteArray(buffer.remaining())
                     buffer.get(raw)
-                    decode(ByteBuffer.wrap(uncompressZlib(raw)), block)
+                    decode(ByteBuffer.wrap(uncompressZlib(raw)), messageTypeHandler)
                     return
                 }
                 assert(head.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL.version)
@@ -141,14 +160,13 @@ object DanmuListener {
                 buffer.get(byteArray)
                 val message = byteArray.toString(Charsets.UTF_8)
                 log.debug(message)
-                val cmd = objectMapper.readTree(message)["cmd"]?.textValue() ?: throw Exception("wrong json , missing [cmd] !")
-                block(cmd, message)
+                handleMessage(message, messageTypeHandler)
+
                 if (buffer.hasRemaining())
-                    decode(buffer, block)
+                    decode(buffer, messageTypeHandler)
             }
             else -> log.warn("code => ${Operation.values().first { i -> i.code == head.code }.name} !!!!!")
         }
     }
-
 }
 
