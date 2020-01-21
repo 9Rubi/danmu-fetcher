@@ -39,7 +39,7 @@ dependencies{
 ## use kotlin
 ```kotlin
 import ink.rubi.bilibili.live.danmu.DanmuListener.receiveDanmu
-import ink.rubi.bilibili.live.danmu.messageHandler
+import ink.rubi.bilibili.live.danmu.handler.messageHandler
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 import org.slf4j.Logger
@@ -70,6 +70,12 @@ object Test {
                         onGuardEnterInLiveRoom {
                             log.info("[舰长][$it] 进入了直播间")
                         }
+                        onUnknownTypeMessage {
+                            log.warn(it)
+                        }
+                        onAllTypeMessage {
+                            log.error(it)
+                        }
                     }
                 }
             }
@@ -78,6 +84,7 @@ object Test {
         }
     }
 }
+
 ```
 
 ## use java

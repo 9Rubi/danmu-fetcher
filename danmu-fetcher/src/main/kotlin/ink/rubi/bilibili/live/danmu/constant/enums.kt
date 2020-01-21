@@ -1,4 +1,4 @@
-package ink.rubi.bilibili.live.danmu
+package ink.rubi.bilibili.live.danmu.constant
 
 enum class Version(val version: Short) {
     WS_BODY_PROTOCOL_VERSION_NORMAL(0),
@@ -45,12 +45,12 @@ enum class CMD(val desc: String) {
     CUT_OFF(""),
     DAILY_QUEST_NEWDAY(""),
     END(""),
-    ENTRY_EFFECT(""),
+    ENTRY_EFFECT("舰长加入特效"),
     GUARD_LOTTERY_START(""),
     GUARD_MSG(""),
     GUIARD_MSG(""),
     HOUR_RANK_AWARDS(""),
-    LIVE(""),
+    LIVE("开播提醒"),
     LOL_ACTIVITY(""),
     LUCK_GIFT_AWARD_USER(""),
     MESSAGEBOX_USER_GAIN_MEDAL(""),

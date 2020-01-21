@@ -1,4 +1,4 @@
-package ink.rubi.bilibili.live.danmu
+package ink.rubi.bilibili.live.danmu.util
 
 import java.io.ByteArrayOutputStream
 import java.util.zip.InflaterOutputStream

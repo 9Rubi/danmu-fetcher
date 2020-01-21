@@ -2,6 +2,11 @@ package ink.rubi.bilibili.live.danmu
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import ink.rubi.bilibili.live.danmu.constant.Operation
+import ink.rubi.bilibili.live.danmu.constant.Version
+import ink.rubi.bilibili.live.danmu.data.*
+import ink.rubi.bilibili.live.danmu.handler.MessageHandler
+import ink.rubi.bilibili.live.danmu.util.uncompressZlib
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
@@ -39,7 +44,7 @@ val client = HttpClient(CIO) {
 @ExperimentalCoroutinesApi
 object DanmuListener {
     @KtorExperimentalAPI
-    fun CoroutineScope.receiveDanmu(roomId: Int, handler: () -> MessageTypeHandler) = launch {
+    fun CoroutineScope.receiveDanmu(roomId: Int, handler: () -> MessageHandler) = launch {
         val realRoomId = client.getRealRoomIdAsync(roomId)
         val hostServer = client.getLoadBalancedWsHostServerAsync(roomId)
 
@@ -137,7 +142,7 @@ object DanmuListener {
         return buffer.array()
     }
 
-    private fun decode(buffer: ByteBuffer, messageTypeHandler: MessageTypeHandler) {
+    private fun decode(buffer: ByteBuffer, handler: MessageHandler) {
         val head = with(buffer) {
             PacketHead(int, short, short, int, int)
         }
@@ -152,7 +157,7 @@ object DanmuListener {
                 if (head.version == Version.WS_BODY_PROTOCOL_VERSION_DEFLATE.version) {
                     val raw = ByteArray(buffer.remaining())
                     buffer.get(raw)
-                    decode(ByteBuffer.wrap(uncompressZlib(raw)), messageTypeHandler)
+                    decode(ByteBuffer.wrap(uncompressZlib(raw)), handler)
                     return
                 }
                 assert(head.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL.version)
@@ -160,10 +165,10 @@ object DanmuListener {
                 buffer.get(byteArray)
                 val message = byteArray.toString(Charsets.UTF_8)
                 log.debug(message)
-                handleMessage(message, messageTypeHandler)
+                handler.handle(message)
 
                 if (buffer.hasRemaining())
-                    decode(buffer, messageTypeHandler)
+                    decode(buffer, handler)
             }
             else -> log.warn("code => ${Operation.values().first { i -> i.code == head.code }.name} !!!!!")
         }

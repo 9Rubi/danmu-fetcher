@@ -1,28 +1,30 @@
 import ink.rubi.bilibili.live.danmu.DanmuListener.receiveDanmu
-import ink.rubi.bilibili.live.danmu.handler.messageHandler
+import ink.rubi.bilibili.live.danmu.handler.typedMessageHandler
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.coroutines.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
-val log: Logger = LoggerFactory.getLogger("[test]")
+@ExperimentalCoroutinesApi
+@KtorExperimentalAPI
+object TypeMessageHandlerTest {
 
-object Test {
-    @ExperimentalCoroutinesApi
-    @FlowPreview
-    @KtorExperimentalAPI
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 958282
+        val roomId = 734
         runBlocking {
             val job = launch {
-                receiveDanmu(roomId){
-                    messageHandler {
-                        onReceiveDanmu { user, said ->
-                            log.info("[$user] : $said")
+                receiveDanmu(roomId) {
+                    typedMessageHandler {
+                        onReceiveDanmu {user, badge, userLevel, said ->
+                            log.info("user          : $user")
+                            log.info("badge         : $badge")
+                            log.info("userLevel     : $userLevel")
+                            log.info("said          : $said")
                         }
-                        onReceiveGift { user, num, giftName ->
-                            log.info("[$user] 送出了 $num 个 [$giftName]")
+                        onReceiveGift { gift ->
+                            log.info("$gift")
                         }
                         onSomeOneEnterInLiveRoom {
                             log.info("[$it] 进入了直播间")
@@ -39,8 +41,8 @@ object Test {
                     }
                 }
             }
-            delay(10000)
-            job.cancel()
         }
     }
+
+
 }

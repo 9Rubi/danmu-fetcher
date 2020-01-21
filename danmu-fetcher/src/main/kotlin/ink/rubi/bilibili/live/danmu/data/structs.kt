@@ -1,4 +1,6 @@
-package ink.rubi.bilibili.live.danmu
+package ink.rubi.bilibili.live.danmu.data
+
+import ink.rubi.bilibili.live.danmu.objectMapper
 
 data class RoomInit(
     val code: Int,
@@ -87,3 +89,8 @@ data class AuthInfo(
     val protover: Int = 2
 //    val key: String = "kI2b1G7RD8DBQs4312ZsLKdWNz2k4yijKKc5NoPBAUNpAxEaC6ai2hKUYVDtCzLGU687Z1NMfCn1IkbDo_75iQq8bq_5N8VJWmZPIGb6MnEedFHJHccG"
 )
+
+
+fun Int.joinToLiveRoomUrl(): String {
+    return "https://live.bilibili.com/$this"
+}
