@@ -12,11 +12,14 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.logging.LogLevel
+import io.ktor.client.features.logging.Logging
 import io.ktor.client.features.websocket.DefaultClientWebSocketSession
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.http.ContentType
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
@@ -30,13 +33,20 @@ const val HEADER_LENGTH = 16
 const val uid = 0
 const val ROOM_INIT_URL = "https://api.live.bilibili.com/room/v1/Room/room_init"
 const val ROOM_LOAD_BALANCE_URL = "https://api.live.bilibili.com/room/v1/Danmu/getConf"
+const val WEB_TITLES = "https://api.live.bilibili.com/rc/v1/Title/webTitles"
+
 val log: Logger = LoggerFactory.getLogger("[danmu-client]")
 val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
+val titlesDatabase = mutableMapOf<String,WebTitle>()
 @KtorExperimentalAPI
 val client = HttpClient(CIO) {
     install(WebSockets)
     install(JsonFeature) {
         serializer = JacksonSerializer()
+        acceptContentTypes = acceptContentTypes + ContentType("text", "json")
+    }
+    install(Logging) {
+        level = LogLevel.NONE
     }
     BrowserUserAgent()
 }
@@ -47,8 +57,9 @@ object DanmuListener {
     fun CoroutineScope.receiveDanmu(roomId: Int, handler: () -> MessageHandler) = launch {
         val realRoomId = client.getRealRoomIdAsync(roomId)
         val hostServer = client.getLoadBalancedWsHostServerAsync(roomId)
+        val titleWrap = client.getWebTitlesAsync()
+        initData(realRoomId, hostServer, titleWrap)
 
-        awaitAndLog(realRoomId, hostServer)
         val handlerImpl = handler()
         client.wss(host = hostServer.getCompleted().host, port = hostServer.getCompleted().wss_port, path = "/sub") {
             launch {
@@ -64,9 +75,15 @@ object DanmuListener {
         }
     }
 
-    private suspend fun awaitAndLog(realRoomId: Deferred<Int>, hostServer: Deferred<HostServer>) {
-        log.info("room id => ${realRoomId.await()}")
-        log.info("use        ${hostServer.await().host}")
+    private suspend fun initData(
+        realRoomId: Deferred<Int>,
+        hostServer: Deferred<HostServer>,
+        titles:  Deferred<List<WebTitle>>
+    ) {
+        titles.await().map { it.identification to it }.toMap(titlesDatabase)
+        log.info("web-titles        : ${titlesDatabase.size}")
+        log.info("room id           : ${realRoomId.await()}")
+        log.info("use server        : ${hostServer.await().host}")
     }
 
     private suspend fun DefaultClientWebSocketSession.heartBeat() {
@@ -102,7 +119,7 @@ object DanmuListener {
 
     private fun HttpClient.getRealRoomIdAsync(roomId: Int): Deferred<Int> {
         return async {
-            this@getRealRoomIdAsync.get<RoomInit>(ROOM_INIT_URL) {
+            this@getRealRoomIdAsync.get<NormalResponse<RoomInitInfo>>(ROOM_INIT_URL) {
                 parameter("id", roomId)
             }.data.room_id
         }
@@ -110,11 +127,17 @@ object DanmuListener {
 
     private fun HttpClient.getLoadBalancedWsHostServerAsync(roomId: Int): Deferred<HostServer> {
         return async {
-            this@getLoadBalancedWsHostServerAsync.get<LoadBalanceInfo>(ROOM_LOAD_BALANCE_URL) {
+            this@getLoadBalancedWsHostServerAsync.get<NormalResponse<LoadBalanceInfo>>(ROOM_LOAD_BALANCE_URL) {
                 parameter("room_id", roomId)
                 parameter("platform", "pc")
                 parameter("player", "web")
             }.data.host_server_list[Random.nextInt(0, 3)]
+        }
+    }
+
+    private fun HttpClient.getWebTitlesAsync(): Deferred<List<WebTitle>> {
+        return async {
+            this@getWebTitlesAsync.get<NormalResponse<List<WebTitle>>>(WEB_TITLES).data
         }
     }
 
@@ -174,4 +197,6 @@ object DanmuListener {
         }
     }
 }
+
+
 

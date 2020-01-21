@@ -1,5 +1,3 @@
-# kotlin 实现的弹幕姬
-
 ## 使用示例
 ```xml
 <project>

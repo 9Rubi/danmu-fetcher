@@ -1,15 +1,25 @@
 package ink.rubi.bilibili.live.danmu.data
 
-import ink.rubi.bilibili.live.danmu.objectMapper
-
-data class RoomInit(
+data class NormalResponse<T>(
     val code: Int,
-    val `data`: DataRoomInit,
+    val msg: String,
     val message: String,
-    val msg: String
+    val `data`: T
 )
 
-data class DataRoomInit(
+data class WebTitle(
+    val colorful: Int,
+    val h5_url: String,
+    val identification: String,
+    val level: String,
+    val name: String,
+    val source: String,
+    val title_id: String,
+    val url: String,
+    val web_pic_url: String
+)
+
+data class RoomInitInfo(
     val encrypted: Boolean,
     val hidden_till: Int,
     val is_hidden: Boolean,
@@ -28,15 +38,7 @@ data class DataRoomInit(
     val uid: Int
 )
 
-
 data class LoadBalanceInfo(
-    val code: Int,
-    val `data`: DataLoadBalanceInfo,
-    val message: String,
-    val msg: String
-)
-
-data class DataLoadBalanceInfo(
     val host: String,
     val host_server_list: List<HostServer>,
     val max_delay: Int,

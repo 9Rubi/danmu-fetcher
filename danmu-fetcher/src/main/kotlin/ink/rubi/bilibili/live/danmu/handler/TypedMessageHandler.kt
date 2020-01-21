@@ -3,11 +3,7 @@ package ink.rubi.bilibili.live.danmu.handler
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import ink.rubi.bilibili.live.danmu.constant.CMD
-import ink.rubi.bilibili.live.danmu.data.Badge
-import ink.rubi.bilibili.live.danmu.data.Gift
-import ink.rubi.bilibili.live.danmu.data.User
-import ink.rubi.bilibili.live.danmu.data.UserLevel
-import ink.rubi.bilibili.live.danmu.log
+import ink.rubi.bilibili.live.danmu.data.*
 import ink.rubi.bilibili.live.danmu.objectMapper
 
 /*
@@ -28,9 +24,11 @@ interface TypedMessageHandler : MessageHandler {
     fun onSomeOneEnterInLiveRoom(block: (user: String) -> Unit)
     fun onGuardEnterInLiveRoom(block: (user: String) -> Unit)
     fun onAllTypeMessage(block: (message: String) -> Unit)
-    fun onUnknownTypeMessage(block: (message: String) -> Unit)
+    fun onUnknownTypeMessage(block: (message: String, cmd: String) -> Unit)
     fun onError(block: (message: String, e: Throwable) -> Unit)
-//    fun onLive
+    fun onLive(block: (roomId: Int) -> Unit)
+    fun onPrepare(block: (roomId: Int) -> Unit)
+    fun onRoomRankChange(block: (rank: RoomRank) -> Unit)
 }
 
 class TypedMessageHandlerImpl(
@@ -39,8 +37,11 @@ class TypedMessageHandlerImpl(
     private var someOneEnterInLiveRoom: ((user: String) -> Unit)? = null,
     private var guardEnterInLiveRoom: ((user: String) -> Unit)? = null,
     private var allTypeMessage: ((message: String) -> Unit)? = null,
-    private var unknownTypeMessage: ((message: String) -> Unit)? = null,
-    private var error: ((message: String, e: Throwable) -> Unit)? = null
+    private var unknownTypeMessage: ((message: String, cmd: String) -> Unit)? = null,
+    private var error: ((message: String, e: Throwable) -> Unit)? = null,
+    private var live: ((roomId: Int) -> Unit)? = null,
+    private var prepare: ((roomId: Int) -> Unit)? = null,
+    private var roomRankChange: ((rank: RoomRank) -> Unit)? = null
 ) : TypedMessageHandler {
 
     override fun onReceiveDanmu(block: (user: User, badge: Badge?, userLevel: UserLevel, said: String) -> Unit) {
@@ -63,12 +64,24 @@ class TypedMessageHandlerImpl(
         allTypeMessage = block
     }
 
-    override fun onUnknownTypeMessage(block: (message: String) -> Unit) {
+    override fun onUnknownTypeMessage(block: ((message: String, cmd: String) -> Unit)) {
         unknownTypeMessage = block
     }
 
     override fun onError(block: (message: String, e: Throwable) -> Unit) {
         error = block
+    }
+
+    override fun onLive(block: (roomId: Int) -> Unit) {
+        live = block
+    }
+
+    override fun onPrepare(block: (roomId: Int) -> Unit) {
+        prepare = block
+    }
+
+    override fun onRoomRankChange(block: (rank: RoomRank) -> Unit) {
+        roomRankChange = block
     }
 
     override fun handle(message: String) {
@@ -115,12 +128,23 @@ class TypedMessageHandlerImpl(
                     val user = json["data"]["username"].textValue()!!
                     guardEnterInLiveRoom?.invoke(user)
                 }
+                CMD.LIVE.name -> {
+                    val roomId = json["roomid"].asInt()
+                    live?.invoke(roomId)
+                }
+                CMD.PREPARING.name -> {
+                    val roomId = json["roomid"].asInt()
+                    prepare?.invoke(roomId)
+                }
+                CMD.ROOM_RANK.name -> {
+                    val rank = objectMapper.readValue<RoomRank>(json["data"].toString())
+                    roomRankChange?.invoke(rank)
+                }
                 else -> {
-                    unknownTypeMessage?.invoke(message)
+                    unknownTypeMessage?.invoke(message, cmd)
                 }
             }
         } catch (e: Throwable) {
-            log.error("catch exception :", e)
             error?.invoke(message, e)
         }
     }

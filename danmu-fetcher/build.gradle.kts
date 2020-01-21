@@ -14,6 +14,7 @@ dependencies {
     api("io.ktor:ktor-client-core-jvm:$ktor_version")
     api("io.ktor:ktor-client-json-jvm:$ktor_version")
     api("io.ktor:ktor-client-jackson:$ktor_version")
+    implementation("io.ktor:ktor-client-logging-jvm:$ktor_version")
     api("io.ktor:ktor-client-cio:$ktor_version")
     api("io.ktor:ktor-websockets:$ktor_version")
     api("io.ktor:ktor-client-websockets:$ktor_version")

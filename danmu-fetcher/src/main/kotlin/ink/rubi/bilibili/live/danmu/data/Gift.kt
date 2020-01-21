@@ -1,14 +1,19 @@
 package ink.rubi.bilibili.live.danmu.data
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import ink.rubi.bilibili.live.danmu.objectMapper
+
 data class Gift(
     val action: String,
     val addFollow: Int,
     val batch_combo_id: String,
+    val batch_combo_send: BatchComboSend?,
     val beatId: String,
     val biz_source: String,
     val broadcast_id: Int,
     val capsule: Any?,
     val coin_type: String,
+    val combo_send: ComboSend?,
     val crit_prob: Int,
     val draw: Int,
     val effect: Int,
@@ -59,5 +64,29 @@ data class Gift(
     /**
      * 用户名
      */
+    val uname: String
+)
+
+data class BatchComboSend(
+    val action: String,
+    val batch_combo_id: String,
+    val batch_combo_num: Int,
+    val gift_id: Int,
+    val gift_name: String,
+    val gift_num: Int,
+    val send_master: Any?,
+    val uid: Int,
+    val uname: String
+)
+
+data class ComboSend(
+    val action: String,
+    val combo_id: String,
+    val combo_num: Int,
+    val gift_id: Int,
+    val gift_name: String,
+    val gift_num: Int,
+    val send_master: Any?,
+    val uid: Int,
     val uname: String
 )
