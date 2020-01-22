@@ -1,23 +1,18 @@
 import ink.rubi.bilibili.live.danmu.DanmuListener.receiveDanmu
-import ink.rubi.bilibili.live.danmu.handler.messageHandler
+import ink.rubi.bilibili.live.danmu.handler.simpleMessageHandler
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
-val log: Logger = LoggerFactory.getLogger("[test]")
-
-object Test {
-    @ExperimentalCoroutinesApi
-    @FlowPreview
-    @KtorExperimentalAPI
+@ExperimentalCoroutinesApi
+@KtorExperimentalAPI
+object SimpleMessageHandlerTest {
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 958282
+        val roomId = 92613
         runBlocking {
             val job = launch {
-                receiveDanmu(roomId){
-                    messageHandler {
+                receiveDanmu(roomId) {
+                    simpleMessageHandler {
                         onReceiveDanmu { user, said ->
                             log.info("[$user] : $said")
                         }

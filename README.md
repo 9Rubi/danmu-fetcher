@@ -13,7 +13,7 @@
         <dependency>
           <groupId>ink.rubi</groupId>
           <artifactId>danmu-fetcher</artifactId>
-          <version>0.0.20</version>
+          <version>0.0.30</version>
         </dependency>
 <!--         日志实现 -->
     </dependencies>
@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies{
-    compile 'ink.rubi:danmu-fetcher:0.0.20'
+    compile 'ink.rubi:danmu-fetcher:0.0.30'
     compile 'ch.qos.logback:logback-classic:1.2.1'
 }
 ```
@@ -37,25 +37,20 @@ dependencies{
 ## use kotlin
 ```kotlin
 import ink.rubi.bilibili.live.danmu.DanmuListener.receiveDanmu
-import ink.rubi.bilibili.live.danmu.handler.messageHandler
+import ink.rubi.bilibili.live.danmu.handler.simpleMessageHandler
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
-val log: Logger = LoggerFactory.getLogger("[test]")
-
-object Test {
-    @ExperimentalCoroutinesApi
-    @FlowPreview
-    @KtorExperimentalAPI
+@ExperimentalCoroutinesApi
+@KtorExperimentalAPI
+object SimpleMessageHandlerTest {
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 5050
+        val roomId = 92613
         runBlocking {
             val job = launch {
-                receiveDanmu(roomId){
-                    messageHandler {
+                receiveDanmu(roomId) {
+                    simpleMessageHandler {
                         onReceiveDanmu { user, said ->
                             log.info("[$user] : $said")
                         }
@@ -82,7 +77,6 @@ object Test {
         }
     }
 }
-
 ```
 
 ## use java

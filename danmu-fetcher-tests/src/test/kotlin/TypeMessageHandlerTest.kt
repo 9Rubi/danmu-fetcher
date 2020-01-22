@@ -11,7 +11,6 @@ object TypeMessageHandlerTest {
 
     @JvmStatic
     fun main(args: Array<String>) {
-//        val roomId = 734
         val roomId = 92613
         runBlocking {
             val job = launch {

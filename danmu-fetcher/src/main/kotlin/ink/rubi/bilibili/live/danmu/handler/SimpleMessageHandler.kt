@@ -86,4 +86,4 @@ class SimpleMessageHandlerImpl(
     }
 }
 
-fun messageHandler(content: SimpleMessageHandler.() -> Unit) = SimpleMessageHandlerImpl().apply(content)
+fun simpleMessageHandler(content: SimpleMessageHandler.() -> Unit) = SimpleMessageHandlerImpl().apply(content)
