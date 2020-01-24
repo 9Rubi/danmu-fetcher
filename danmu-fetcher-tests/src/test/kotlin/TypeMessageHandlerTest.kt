@@ -11,7 +11,7 @@ object TypeMessageHandlerTest {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 92613
+        val roomId = 115
         runBlocking {
             val job = launch {
                 receiveDanmu(roomId) {
@@ -27,7 +27,7 @@ object TypeMessageHandlerTest {
                             log.info("num           : ${gift.num}")
                             log.info("giftName      : ${gift.giftName}")
                         }
-                        onSomeOneEnterInLiveRoom { log.info("[$it] 进入了直播间") }
+                        onVipEnterInLiveRoom { log.info("[$it] 进入了直播间") }
                         onGuardEnterInLiveRoom { log.info("[舰长][$it] 进入了直播间") }
                         onUnknownTypeMessage { message, _ ->
                             log.warn(message)

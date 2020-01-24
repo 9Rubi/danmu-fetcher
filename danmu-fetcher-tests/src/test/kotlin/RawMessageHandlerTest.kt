@@ -1,7 +1,10 @@
 import ink.rubi.bilibili.live.danmu.DanmuListener.receiveDanmu
 import ink.rubi.bilibili.live.danmu.handler.rawMessageHandler
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
@@ -11,17 +14,15 @@ object RawMessageHandlerTest {
     fun main(args: Array<String>) {
         val roomId = 92613
         runBlocking {
-            val job = launch {
+            launch{
                 receiveDanmu(roomId) {
                     rawMessageHandler {
                         onMessage {
-                            log.info("raw message:$it")
+                            log.warn("raw message:$it")
                         }
                     }
                 }
             }
-            delay(10000)
-//            job.cancel()
         }
     }
 }

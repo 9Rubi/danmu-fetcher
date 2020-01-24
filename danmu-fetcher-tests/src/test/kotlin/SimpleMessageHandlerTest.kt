@@ -19,7 +19,7 @@ object SimpleMessageHandlerTest {
                         onReceiveGift { user, num, giftName ->
                             log.info("[$user] 送出了 $num 个 [$giftName]")
                         }
-                        onSomeOneEnterInLiveRoom {
+                        onVipEnterInLiveRoom {
                             log.info("[$it] 进入了直播间")
                         }
                         onGuardEnterInLiveRoom {

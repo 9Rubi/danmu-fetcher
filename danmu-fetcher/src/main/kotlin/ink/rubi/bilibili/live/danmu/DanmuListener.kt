@@ -20,12 +20,15 @@ import io.ktor.client.features.websocket.wss
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
+import io.ktor.http.DEFAULT_PORT
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
+import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 
 
@@ -34,10 +37,11 @@ const val uid = 0
 const val ROOM_INIT_URL = "https://api.live.bilibili.com/room/v1/Room/room_init"
 const val ROOM_LOAD_BALANCE_URL = "https://api.live.bilibili.com/room/v1/Danmu/getConf"
 const val WEB_TITLES = "https://api.live.bilibili.com/rc/v1/Title/webTitles"
-
+const val DEFAULT_DANMU_HOST = "broadcastlv.chat.bilibili.com"
+var loadBalance = true
 val log: Logger = LoggerFactory.getLogger("[danmu-client]")
 val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
-val titlesDatabase = mutableMapOf<String,WebTitle>()
+val titlesDatabase = mutableMapOf<String, WebTitle>()
 @KtorExperimentalAPI
 val client = HttpClient(CIO) {
     install(WebSockets)
@@ -46,7 +50,7 @@ val client = HttpClient(CIO) {
         acceptContentTypes = acceptContentTypes + ContentType("text", "json")
     }
     install(Logging) {
-        level = LogLevel.NONE
+        level = LogLevel.ALL
     }
     BrowserUserAgent()
 }
@@ -54,15 +58,22 @@ val client = HttpClient(CIO) {
 @ExperimentalCoroutinesApi
 object DanmuListener {
     @KtorExperimentalAPI
-    fun CoroutineScope.receiveDanmu(roomId: Int, handler: () -> MessageHandler) = launch {
+    fun CoroutineScope.receiveDanmu(
+        roomId: Int, // workersContext: CoroutineContext =  Executors.newFixedThreadPool(10).asCoroutineDispatcher(),
+        handler: () -> MessageHandler
+    ) = launch {
         val realRoomId = client.getRealRoomIdAsync(roomId)
         val hostServer = client.getLoadBalancedWsHostServerAsync(roomId)
         val titleWrap = client.getWebTitlesAsync()
         initData(realRoomId, hostServer, titleWrap)
-
         val handlerImpl = handler()
-        client.wss(host = hostServer.getCompleted().host, port = hostServer.getCompleted().wss_port, path = "/sub") {
-            launch {
+        client.wss(
+            host = if (loadBalance) hostServer.getCompleted().host else DEFAULT_DANMU_HOST,
+            port = if (loadBalance && hostServer.getCompleted().host != DEFAULT_DANMU_HOST)
+                hostServer.getCompleted().wss_port else DEFAULT_PORT,
+            path = "/sub"
+        ) {
+            launch(this@receiveDanmu.coroutineContext) {
                 while (true)
                     decode(incoming.receive().buffer, handlerImpl)
             }
@@ -78,7 +89,7 @@ object DanmuListener {
     private suspend fun initData(
         realRoomId: Deferred<Int>,
         hostServer: Deferred<HostServer>,
-        titles:  Deferred<List<WebTitle>>
+        titles: Deferred<List<WebTitle>>
     ) {
         titles.await().map { it.identification to it }.toMap(titlesDatabase)
         log.info("web-titles        : ${titlesDatabase.size}")
@@ -170,7 +181,7 @@ object DanmuListener {
             PacketHead(int, short, short, int, int)
         }
         when (head.code) {
-            Operation.HEARTBEAT_REPLY.code -> log.info("heart beat packet")
+            Operation.HEARTBEAT_REPLY.code -> log.debug("heart beat packet")
             Operation.AUTH_REPLY.code -> {
                 val body = ByteArray(buffer.remaining())
                 buffer.get(body)

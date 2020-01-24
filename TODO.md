@@ -1,3 +1,4 @@
+- [ ] ROOM_CHANGE
 - [ ] ROOM_REAL_TIME_MESSAGE_UPDATE
 - [ ] ACTIVITY_BANNER_UPDATE_V2
 - [ ] COMBO_END
@@ -31,6 +32,29 @@
 {"cmd":"ROOM_SKIN_MSG","skin_id":47,"status":1,"end_time":1579708800,"current_time":1579632241,"scatter":{"min":1,"max":200}}
 {"cmd":"GUARD_MSG","msg":"欢迎 :?总督 粟米米米米米米米米丶:? 登船"}
 {"cmd":"ROOM_SILENT_OFF","data":[]}
+
+
+
+上舰
+2020-01-22 21:19:32.398 [ktor-cio-thread-1] INFO  [test] - raw message:{"buy_type":3,"cmd":"GUARD_MSG","msg":":?Nkkwiii:? 在本房间开通了舰长"}
+2020-01-22 21:19:32.398 [ktor-cio-thread-1] INFO  [test] - raw message:{"roomid":92613,"msg_common":"\u003c%Nkkwiii%\u003e在本房间开通了舰长","msg_self":"\u003c%Nkkwiii%\u003e在本房间开通了舰长","link_url":"http://live.bilibili.com/92613?live_lottery_type=2\u0026broadcast_type=","msg_type":3,"full":{"head_icon":"http://i0.hdslb.com/bfs/live/72337e86020b8d0874d817f15c48a610894b94ff.png","tail_icon":"http://i0.hdslb.com/bfs/live/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp","head_icon_fa":"http://i0.hdslb.com/bfs/live/72337e86020b8d0874d817f15c48a610894b94ff.png","tail_icon_fa":"http://i0.hdslb.com/bfs/live/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png","head_icon_fan":1,"tail_icon_fan":4,"background":"#FFB03CFF","color":"#FFFFFFFF","highlight":"#B25AC1FF","time":10},"half":{"head_icon":"","tail_icon":"","background":"","color":"","highlight":"","time":0},"side":{"head_icon":"http://i0.hdslb.com/bfs/live/31566d8cd5d468c30de8c148c5d06b3b345d8333.png","background":"#FFE9C8FF","color":"#EF903AFF","highlight":"#D54900FF","border":"#FFCFA4FF"},"shield_uid":0,"real_roomid":92613,"cmd":"NOTICE_MSG"}
+2020-01-22 21:19:32.398 [ktor-cio-thread-1] INFO  [test] - raw message:{"cmd":"GUARD_LOTTERY_START","data":{"id":1902099,"link":"https://live.bilibili.com/92613","lottery":{"asset_animation_pic":"https://i0.hdslb.com/bfs/vc/ff2a28492970850ce73df0cc144f1766b222d471.gif","asset_icon":"https://i0.hdslb.com/bfs/vc/43f488e7c4dca5ba6fbdcb88f40052d56bf777d8.png","id":1902099,"keyword":"guard","mobile_animation_asset":"","mobile_display_mode":2,"mobile_static_asset":"","privilege_type":3,"sender":{"face":"http://i1.hdslb.com/bfs/face/fc1dc7b53c301524d167cf04f6add30fcf112957.jpg","uid":4447893,"uname":"Nkkwiii"},"status":1,"thank_text":"恭喜\u003c%Nkkwiii%\u003e上任舰长","time":1200,"time_wait":0,"weight":0},"payflow_id":"android_f2ae1d061db474f862_202001","privilege_type":3,"roomid":92613,"type":"guard"}}
+
+
+修改分区/标题
+{
+	"cmd": "ROOM_CHANGE",
+	"data": {
+		"title": "。",
+		"area_id": 283,
+		"parent_area_id": 6,
+		"area_name": "独立游戏",
+		"parent_area_name": "单机"
+	}
+}
+
+
+
 ```
 
 
