@@ -2,7 +2,8 @@ package ink.rubi.bilibili.live.danmu.handler
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.readValue
-import ink.rubi.bilibili.live.danmu.constant.CMD
+import ink.rubi.bilibili.live.danmu.constant.CMD.*
+import ink.rubi.bilibili.live.danmu.constant.searchCMD
 import ink.rubi.bilibili.live.danmu.data.*
 import ink.rubi.bilibili.live.danmu.exception.MessageException
 import ink.rubi.bilibili.live.danmu.objectMapper
@@ -78,8 +79,8 @@ class TypedMessageHandlerImpl(
             allTypeMessage?.invoke(message)
             val json = objectMapper.readTree(message)
             val cmd = json["cmd"]?.textValue() ?: throw Exception("unexpect json format, missing [cmd] !")
-            when (cmd) {
-                CMD.DANMU_MSG.name -> {
+            when (searchCMD(cmd)) {
+                DANMU_MSG -> {
                     val info = json["info"]
                     val said = info[1].textValue()!!
                     val user = with(info[2]) {
@@ -105,33 +106,34 @@ class TypedMessageHandlerImpl(
                     }
                     receiveDanmu?.invoke(user, badge, userLevel, said)
                 }
-                CMD.SEND_GIFT.name -> {
+                SEND_GIFT -> {
                     val gift = objectMapper.readValue<Gift>(json["data"].toString())
                     receiveGift?.invoke(gift)
                 }
-                CMD.WELCOME.name -> {
+                WELCOME -> {
                     val user = json["data"]["uname"].textValue()!!
                     vipEnterInLiveRoom?.invoke(user)
                 }
-                CMD.WELCOME_GUARD.name -> {
+                WELCOME_GUARD -> {
                     val user = json["data"]["username"].textValue()!!
                     guardEnterInLiveRoom?.invoke(user)
                 }
-                CMD.LIVE.name -> {
+                LIVE -> {
                     val roomId = json["roomid"].asInt()
                     live?.invoke(roomId)
                 }
-                CMD.PREPARING.name -> {
+                PREPARING -> {
                     val roomId = json["roomid"].asInt()
                     prepare?.invoke(roomId)
                 }
-                CMD.ROOM_RANK.name -> {
+                ROOM_RANK -> {
                     val rank = objectMapper.readValue<RoomRank>(json["data"].toString())
                     roomRankChange?.invoke(rank)
                 }
-                else -> {
-                    unknownTypeMessage?.invoke(message, cmd)
+                UNKNOWN -> {
+                    unknownTypeMessage?.invoke(message,cmd)
                 }
+                else -> { }
             }
         } catch (e: Throwable) {
             error?.invoke(message, MessageException("catch an exception while handling a message : $message",e))

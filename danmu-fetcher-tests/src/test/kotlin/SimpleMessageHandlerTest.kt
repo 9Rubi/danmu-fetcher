@@ -8,7 +8,7 @@ import kotlinx.coroutines.*
 object SimpleMessageHandlerTest {
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 92613
+        val roomId = 115
         runBlocking {
             val job = launch {
                 receiveDanmu(roomId) {
@@ -34,7 +34,7 @@ object SimpleMessageHandlerTest {
                     }
                 }
             }
-            delay(10000)
+            delay(60000)
             job.cancel()
         }
     }

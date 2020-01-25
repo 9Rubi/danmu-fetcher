@@ -1,6 +1,7 @@
 package ink.rubi.bilibili.live.danmu.handler
 
-import ink.rubi.bilibili.live.danmu.constant.CMD
+import ink.rubi.bilibili.live.danmu.constant.CMD.*
+import ink.rubi.bilibili.live.danmu.constant.searchCMD
 import ink.rubi.bilibili.live.danmu.exception.MessageException
 import ink.rubi.bilibili.live.danmu.objectMapper
 
@@ -56,32 +57,33 @@ class SimpleMessageHandlerImpl(
             allTypeMessage?.invoke(message)
             val json = objectMapper.readTree(message)
             val cmd = json["cmd"]?.textValue() ?: throw Exception("unexpect json format, missing [cmd] !")
-            when (cmd) {
-                CMD.DANMU_MSG.name -> {
+            when (searchCMD(cmd)) {
+                DANMU_MSG -> {
                     val said = json["info"][1].textValue()!!
                     val user = json["info"][2][1].textValue()!!
                     receiveDanmu?.invoke(user, said)
                 }
-                CMD.SEND_GIFT.name -> {
+                SEND_GIFT -> {
                     val user = json["data"]["uname"].textValue()!!
                     val num = json["data"]["num"].intValue()
                     val giftName = json["data"]["giftName"].textValue()!!
                     receiveGift?.invoke(user, num, giftName)
                 }
-                CMD.WELCOME.name -> {
+                WELCOME -> {
                     val user = json["data"]["uname"].textValue()!!
                     vipEnterInLiveRoom?.invoke(user)
                 }
-                CMD.WELCOME_GUARD.name -> {
+                WELCOME_GUARD -> {
                     val user = json["data"]["username"].textValue()!!
                     guardEnterInLiveRoom?.invoke(user)
                 }
-                else -> {
+                UNKNOWN -> {
                     unknownTypeMessage?.invoke(message)
                 }
+                else -> { }
             }
         } catch (e: Throwable) {
-            error?.invoke(message, MessageException("catch an exception while handling a message : $message",e))
+            error?.invoke(message, MessageException("catch an exception while handling a message : $message", e))
         }
     }
 }

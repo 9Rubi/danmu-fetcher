@@ -2,6 +2,7 @@ import ink.rubi.bilibili.live.danmu.DanmuListener.receiveDanmu
 import ink.rubi.bilibili.live.danmu.handler.typedMessageHandler
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -44,6 +45,8 @@ object TypeMessageHandlerTest {
                     }
                 }
             }
+            delay(60000)
+            job.cancel()
         }
     }
 

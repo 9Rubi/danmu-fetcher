@@ -1,9 +1,12 @@
 package ink.rubi.bilibili.live.danmu.constant
 
+import ink.rubi.bilibili.live.danmu.exception.UnknownException
+
 enum class Version(val version: Short) {
     WS_BODY_PROTOCOL_VERSION_NORMAL(0),
     WS_BODY_PROTOCOL_VERSION_INT(1), // 用于心跳包
-    WS_BODY_PROTOCOL_VERSION_DEFLATE(2)
+    WS_BODY_PROTOCOL_VERSION_DEFLATE(2),
+    UNKNOWN(Short.MIN_VALUE)
 }
 
 enum class Operation(val code: Int) {
@@ -25,6 +28,7 @@ enum class Operation(val code: Int) {
     REGISTER_REPLY(15),
     UNREGISTER(16),
     UNREGISTER_REPLY(17),
+    UNKNOWN(Int.MIN_VALUE)
 }
 
 enum class CMD(val desc: String) {
@@ -104,6 +108,16 @@ enum class CMD(val desc: String) {
     WELCOME_ACTIVITY(""),
     WELCOME_GUARD(" `舰长` 进入直播间"),
     WIN_ACTIVITY(""),
-    WISH_BOTTLE("许愿瓶")
-
+    WISH_BOTTLE("许愿瓶"),
+    UNKNOWN("待补充，暂时无法处理"),
 }
+
+
+fun searchCMD(cmd: String, throwIfNotFound: Boolean = false) = CMD.values().find { it.name == cmd }
+    ?: if (throwIfNotFound) throw UnknownException("unknown cmd : $cmd") else CMD.UNKNOWN
+
+fun searchOperation(operation: Int, throwIfNotFound: Boolean = false) = Operation.values().find { it.code == operation }
+    ?: if (throwIfNotFound) throw UnknownException("unknown operation : $operation") else Operation.UNKNOWN
+
+fun searchVersion(version: Short, throwIfNotFound: Boolean = false) = Version.values().find { it.version == version }
+    ?: if (throwIfNotFound) throw UnknownException("unknown version : $version") else Version.UNKNOWN

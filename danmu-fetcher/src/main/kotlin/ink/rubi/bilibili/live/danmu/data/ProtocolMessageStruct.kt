@@ -1,5 +1,101 @@
 package ink.rubi.bilibili.live.danmu.data
 
+import ink.rubi.bilibili.live.danmu.constant.Operation
+import ink.rubi.bilibili.live.danmu.constant.Version
+import ink.rubi.bilibili.live.danmu.constant.searchOperation
+import ink.rubi.bilibili.live.danmu.constant.searchVersion
+import ink.rubi.bilibili.live.danmu.data.Packet.Companion.createPacket
+import ink.rubi.bilibili.live.danmu.objectMapper
+import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.cio.websocket.WebSocketSession
+import java.nio.ByteBuffer
+
+const val heartBeatContent = "[object Object]"
+
+object Packets {
+    val heartBeatPacket = createPacket(
+        PacketHead(Version.WS_BODY_PROTOCOL_VERSION_INT, Operation.HEARTBEAT),
+        ByteBuffer.wrap(heartBeatContent.toByteArray())
+    )
+    val authPacket = fun(uid: Int, roomId: Int) = createPacket(
+        PacketHead(Version.WS_BODY_PROTOCOL_VERSION_INT, Operation.AUTH),
+        ByteBuffer.wrap(objectMapper.writeValueAsString(AuthInfo(uid, roomId))!!.toByteArray())
+    )
+}
+
+class Packet private constructor(private val _header: PacketHead, private val _payload: ByteBuffer) {
+    val header: PacketHead
+        get() = _header
+    val payload: ByteBuffer
+        get() = _payload
+
+    companion object {
+        fun createPacket(header: PacketHead, payload: ByteBuffer): Packet {
+            return Packet(header, payload).apply { this.calcHeaderLength() }
+        }
+
+        fun createPacket(
+            header: PacketHead, payload: ByteBuffer, packLength: Int,
+            headLength: Short
+        ): Packet {
+            return Packet(header, payload).apply {
+                with(this.header) {
+                    this.packLength = packLength
+                    this.headLength = headLength
+                }
+            }
+        }
+
+        fun resolve(buffer: ByteBuffer): Packet {
+            with(buffer) {
+                val packLength = int
+                val headLength = short
+                val version = short
+                val code = int
+                val seq = int
+                val body = ByteArray(buffer.remaining())
+                get(body)
+                return createPacket(
+                    PacketHead(
+                        searchVersion(version, true),
+                        searchOperation(code, true),
+                        seq
+                    ), ByteBuffer.wrap(body), packLength, headLength
+                )
+            }
+        }
+    }
+
+    private fun calcHeaderLength() {
+        header.packLength = header.headLength + payload.limit()
+    }
+
+    fun toFrame(): Frame {
+        return ByteBuffer.allocate(header.packLength).apply {
+            putInt(header.packLength)
+            putShort(header.headLength)
+            putShort(header.version.version)
+            putInt(header.code.code)
+            putInt(header.seq)
+            put(payload)
+            flip()
+        }.let { Frame.Binary(true, it) }
+    }
+}
+
+data class PacketHead(
+    val version: Version,
+    val code: Operation,
+    val seq: Int = 1
+) {
+    var packLength: Int = 0
+    var headLength: Short = 16
+}
+
+
+internal suspend inline fun WebSocketSession.sendPacket(packet: Packet) = send(packet.toFrame())
+
+
 data class NormalResponse<T>(
     val code: Int,
     val msg: String,
@@ -62,26 +158,6 @@ data class Server(
 )
 
 
-//封包格式
-//封包由头部和数据组成，字节序均为大端模式
-//客户端要每30s发一次
-data class PacketHead(
-    val packLength: Int, //封包总大小
-    val headLength: Short,//头部长度
-    val version: Short = 1, //协议版本，目前是1
-    /**
-     *```
-     * 2 	客户端发送的心跳包
-     * 3 	人气值，数据不是JSON，是4字节整数
-     * 5 	命令，数据中['cmd']表示具体命令
-     * 7 	认证并加入房间
-     * 8 	服务器发送的心跳包
-     *```
-     */
-    val code: Int, //操作码（封包类型）
-    val seq: Int = 1 //sequence，可以取常数1
-)
-
 data class AuthInfo(
     val uid: Int,//0表示未登录，否则为用户ID
     val roomid: Int,//房间ID
@@ -91,7 +167,6 @@ data class AuthInfo(
     val protover: Int = 2
 //    val key: String = "kI2b1G7RD8DBQs4312ZsLKdWNz2k4yijKKc5NoPBAUNpAxEaC6ai2hKUYVDtCzLGU687Z1NMfCn1IkbDo_75iQq8bq_5N8VJWmZPIGb6MnEedFHJHccG"
 )
-
 
 fun Int.joinToLiveRoomUrl(): String {
     return "https://live.bilibili.com/$this"
