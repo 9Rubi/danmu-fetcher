@@ -5,8 +5,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import java.io.ByteArrayOutputStream
-import java.util.zip.InflaterOutputStream
 import kotlin.random.Random
 
 

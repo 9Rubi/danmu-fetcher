@@ -1,8 +1,5 @@
 package ink.rubi.bilibili.live.danmu.data
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import ink.rubi.bilibili.live.danmu.objectMapper
-
 data class Gift(
     val action: String,
     val addFollow: Int,
