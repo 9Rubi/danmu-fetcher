@@ -5,6 +5,8 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import java.io.ByteArrayOutputStream
+import java.util.zip.InflaterOutputStream
 import kotlin.random.Random
 
 
@@ -12,14 +14,6 @@ const val ROOM_INIT_URL = "https://api.live.bilibili.com/room/v1/Room/room_init"
 const val ROOM_LOAD_BALANCE_URL = "https://api.live.bilibili.com/room/v1/Danmu/getConf"
 const val WEB_TITLES = "https://api.live.bilibili.com/rc/v1/Title/webTitles"
 const val DEFAULT_DANMU_HOST = "broadcastlv.chat.bilibili.com"
-
-data class GuardInfo(
-    val guard_level: Int,
-    val mock_effect: Int,
-    val uid: Int,
-    val username: String
-)
-
 fun HttpClient.getRealRoomIdAsync(roomId: Int): Deferred<Int> {
     return async {
         this@getRealRoomIdAsync.get<NormalResponse<RoomInitInfo>>(ROOM_INIT_URL) {
@@ -43,3 +37,10 @@ fun HttpClient.getWebTitlesAsync(): Deferred<List<WebTitle>> {
         this@getWebTitlesAsync.get<NormalResponse<List<WebTitle>>>(WEB_TITLES).data
     }
 }
+
+data class GuardInfo(
+    val guard_level: Int,
+    val mock_effect: Int,
+    val uid: Int,
+    val username: String
+)

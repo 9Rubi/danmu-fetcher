@@ -7,7 +7,6 @@ import ink.rubi.bilibili.live.danmu.constant.Version
 import ink.rubi.bilibili.live.danmu.constant.searchOperation
 import ink.rubi.bilibili.live.danmu.data.*
 import ink.rubi.bilibili.live.danmu.handler.MessageHandler
-import ink.rubi.bilibili.live.danmu.util.uncompressZlib
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
@@ -111,14 +110,12 @@ object DanmuListener {
                 if (payload.hasRemaining())
                     decode(payload, handler)
             }
-            else ->{
+            else -> {
                 val operation = searchOperation(header.code.code)
-                if (operation == Operation.UNKNOWN){
+                if (operation == Operation.UNKNOWN)
                     log.warn("code unknown! => ${header.code.code}")
-                }else{
+                else
                     log.warn("code exist in enums,but now haven't been handle => name : ${operation.name} , code : ${operation.code} ")
-                }
-
             }
         }
     }
