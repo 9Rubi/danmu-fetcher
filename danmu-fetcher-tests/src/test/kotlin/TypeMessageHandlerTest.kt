@@ -1,4 +1,4 @@
-import ink.rubi.bilibili.live.danmu.DanmuListener.receiveDanmu
+import ink.rubi.bilibili.live.danmu.DanmuListener.connectLiveRoom
 import ink.rubi.bilibili.live.danmu.handler.typedMessageHandler
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,7 +15,7 @@ object TypeMessageHandlerTest {
         val roomId = 115
         runBlocking {
             val job = launch {
-                receiveDanmu(roomId) {
+                connectLiveRoom(roomId,
                     typedMessageHandler {
                         onReceiveDanmu { user, badge, userLevel, said ->
                             log.info("user          : $user")
@@ -43,7 +43,7 @@ object TypeMessageHandlerTest {
 
                         onError { _, e -> log.error("catch exception :", e) }
                     }
-                }
+                )
             }
             delay(60000)
             job.cancel()

@@ -1,7 +1,7 @@
 package ink.rubi.bilibili.live.danmu.handler
 
-import ink.rubi.bilibili.live.danmu.constant.CMD.*
-import ink.rubi.bilibili.live.danmu.constant.searchCMD
+import ink.rubi.bilibili.live.danmu.data.CMD.*
+import ink.rubi.bilibili.live.danmu.data.searchCMD
 import ink.rubi.bilibili.live.danmu.exception.MessageException
 import ink.rubi.bilibili.live.danmu.objectMapper
 
@@ -80,7 +80,8 @@ class SimpleMessageHandlerImpl(
                 UNKNOWN -> {
                     unknownTypeMessage?.invoke(message)
                 }
-                else -> { }
+                else -> {
+                }
             }
         } catch (e: Throwable) {
             error?.invoke(message, MessageException("catch an exception while handling a message : $message", e))

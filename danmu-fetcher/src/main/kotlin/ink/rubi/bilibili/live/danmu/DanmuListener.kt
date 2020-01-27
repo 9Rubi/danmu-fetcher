@@ -2,11 +2,13 @@ package ink.rubi.bilibili.live.danmu
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import ink.rubi.bilibili.live.danmu.constant.Operation
-import ink.rubi.bilibili.live.danmu.constant.Version
-import ink.rubi.bilibili.live.danmu.constant.searchOperation
 import ink.rubi.bilibili.live.danmu.data.*
+import ink.rubi.bilibili.live.danmu.data.Operation.*
+import ink.rubi.bilibili.live.danmu.handler.EventHandler
+import ink.rubi.bilibili.live.danmu.handler.EventType.*
 import ink.rubi.bilibili.live.danmu.handler.MessageHandler
+import ink.rubi.bilibili.live.danmu.handler.simpleEventHandler
+import ink.rubi.bilibili.live.danmu.handler.simpleMessageHandler
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
@@ -40,7 +42,7 @@ val client = HttpClient(CIO) {
         acceptContentTypes = acceptContentTypes + ContentType("text", "json")
     }
     install(Logging) {
-        level = LogLevel.ALL
+        level = LogLevel.NONE
     }
     BrowserUserAgent()
 }
@@ -48,27 +50,65 @@ val client = HttpClient(CIO) {
 @ExperimentalCoroutinesApi
 object DanmuListener {
     @KtorExperimentalAPI
-    fun CoroutineScope.receiveDanmu(
+    fun CoroutineScope.connectLiveRoom(
         roomId: Int, // workersContext: CoroutineContext =  Executors.newFixedThreadPool(10).asCoroutineDispatcher(),
-        handler: () -> MessageHandler
+        messageHandler: MessageHandler =
+            simpleMessageHandler {
+                onReceiveDanmu { user, said ->
+                    log.info("[$user] : $said")
+                }
+                onReceiveGift { user, num, giftName ->
+                    log.info("[$user] 送出了 $num 个 [$giftName]")
+                }
+            }
+        ,
+        eventHandler: EventHandler = simpleEventHandler {
+            onConnect {
+                log.info("connect!")
+            }
+            onConnected {
+                log.info("connected!")
+            }
+            onLoginSuccess {
+                log.info("login success!")
+            }
+            onLoginFail {
+                log.info("login failed!")
+            }
+            onLogin {
+                log.info("login ...")
+            }
+        }
+
     ) = launch {
         val realRoomId = client.getRealRoomIdAsync(roomId)
         val hostServer = client.getLoadBalancedWsHostServerAsync(roomId)
         val titleWrap = client.getWebTitlesAsync()
         initData(realRoomId, hostServer, titleWrap)
-        val handlerImpl = handler()
+        eventHandler.handle(CONNECT)
         client.wss(
             host = if (loadBalance) hostServer.getCompleted().host else DEFAULT_DANMU_HOST,
             port = if (loadBalance && hostServer.getCompleted().host != DEFAULT_DANMU_HOST)
                 hostServer.getCompleted().wss_port else DEFAULT_PORT,
             path = "/sub"
+
         ) {
-            launch(this@receiveDanmu.coroutineContext) {
+            eventHandler.handle(CONNECTED)
+            launch(this@connectLiveRoom.coroutineContext) {
                 while (true)
-                    decode(incoming.receive().buffer, handlerImpl)
+                    decode(incoming.receive().buffer, messageHandler, eventHandler)
             }
-            log.info("login ....")//0228
+            eventHandler.handle(LOGIN)
             sendPacket(Packets.authPacket(uid, realRoomId.getCompleted()))
+            launch {
+                closeReason.await()?.let {
+                    with(it) {
+                        println("code:$code")
+                        println("message:$message")
+                        println("reason:$knownReason")
+                    }
+                }
+            }
             while (true) {
                 sendPacket(Packets.heartBeatPacket)
                 delay(30_000)
@@ -87,17 +127,24 @@ object DanmuListener {
         log.info("use server        : ${hostServer.await().host}")
     }
 
-
-    private fun decode(buffer: ByteBuffer, handler: MessageHandler) {
+    private fun decode(
+        buffer: ByteBuffer,
+        messageHandler: MessageHandler,
+        eventHandler: EventHandler
+    ) {
         val packet = Packet.resolve(buffer)
         val header = packet.header
         val payload = packet.payload
         when (header.code) {
-            Operation.HEARTBEAT_REPLY -> log.debug("heart beat packet")
-            Operation.AUTH_REPLY -> log.info("response => ${payload.array().toString(Charsets.UTF_8)}")
-            Operation.SEND_MSG_REPLY -> {
+            HEARTBEAT_REPLY -> log.debug("heart beat packet")
+            AUTH_REPLY -> {
+                val message = payload.array().toString(Charsets.UTF_8)
+                eventHandler.handle(if (message == """{"code":0}""") LOGIN_SUCCESS else LOGIN_FAILED)
+                log.info("response => $message")
+            }
+            SEND_MSG_REPLY -> {
                 if (header.version == Version.WS_BODY_PROTOCOL_VERSION_DEFLATE) {
-                    decode(ByteBuffer.wrap(uncompressZlib(payload.array())), handler)
+                    decode(ByteBuffer.wrap(uncompressZlib(payload.array())), messageHandler, eventHandler)
                     return
                 }
                 assert(header.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL)
@@ -105,14 +152,14 @@ object DanmuListener {
                 payload.get(byteArray)
                 byteArray.toString(Charsets.UTF_8).let { message ->
                     log.debug(message)
-                    handler.handle(message)
+                    messageHandler.handle(message)
                 }
                 if (payload.hasRemaining())
-                    decode(payload, handler)
+                    decode(payload, messageHandler, eventHandler)
             }
             else -> {
                 val operation = searchOperation(header.code.code)
-                if (operation == Operation.UNKNOWN)
+                if (operation == UNKNOWN)
                     log.warn("code unknown! => ${header.code.code}")
                 else
                     log.warn("code exist in enums,but now haven't been handle => name : ${operation.name} , code : ${operation.code} ")
