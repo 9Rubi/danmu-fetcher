@@ -1,11 +1,12 @@
-package ink.rubi.bilibili.live.danmu.handler
+package ink.rubi.bilibili.live.handler
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import ink.rubi.bilibili.live.danmu.data.*
-import ink.rubi.bilibili.live.danmu.data.CMD.*
-import ink.rubi.bilibili.live.danmu.exception.MessageException
-import ink.rubi.bilibili.live.danmu.objectMapper
+import ink.rubi.bilibili.live.data.*
+import ink.rubi.bilibili.live.data.CMD.*
+import ink.rubi.bilibili.live.exception.MessageException
+import ink.rubi.bilibili.live.objectMapper
 
 interface TypedMessageHandler : MessageHandler {
     fun onReceiveDanmu(block: (user: User, badge: Badge?, userLevel: UserLevel, said: String) -> Unit)
@@ -135,7 +136,12 @@ class TypedMessageHandlerImpl(
                 else -> { }
             }
         } catch (e: Throwable) {
-            error?.invoke(message, MessageException("catch an exception while handling a message : $message",e))
+            error?.invoke(message,
+                MessageException(
+                    "catch an exception while handling a message : $message",
+                    e
+                )
+            )
         }
     }
 }

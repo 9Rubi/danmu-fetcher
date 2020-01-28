@@ -1,6 +1,6 @@
-package ink.rubi.bilibili.live.danmu.handler
+package ink.rubi.bilibili.live.handler
 
-import ink.rubi.bilibili.live.danmu.handler.EventType.*
+import ink.rubi.bilibili.live.handler.EventType.*
 
 interface SimpleEventHandler : EventHandler {
     fun onConnect(block: () -> Unit)

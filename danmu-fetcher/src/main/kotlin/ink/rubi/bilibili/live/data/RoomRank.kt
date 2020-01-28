@@ -1,4 +1,4 @@
-package ink.rubi.bilibili.live.danmu.data
+package ink.rubi.bilibili.live.data
 
 data class RoomRank(
     val color: String,

@@ -1,4 +1,4 @@
-package ink.rubi.bilibili.live.danmu.handler
+package ink.rubi.bilibili.live.handler
 
 interface RawMessageHandler : MessageHandler {
     fun onMessage(block: (message: String) -> Unit)

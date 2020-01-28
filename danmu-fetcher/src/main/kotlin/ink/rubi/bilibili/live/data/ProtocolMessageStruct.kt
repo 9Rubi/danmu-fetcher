@@ -1,11 +1,12 @@
-package ink.rubi.bilibili.live.danmu.data
+package ink.rubi.bilibili.live.data
 
-import ink.rubi.bilibili.live.danmu.data.CMD.Companion.byCommand
-import ink.rubi.bilibili.live.danmu.data.Operation.Companion.byCode
-import ink.rubi.bilibili.live.danmu.data.Packet.Companion.createPacket
-import ink.rubi.bilibili.live.danmu.data.Version.Companion.byVersion
-import ink.rubi.bilibili.live.danmu.exception.UnknownException
-import ink.rubi.bilibili.live.danmu.objectMapper
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import ink.rubi.bilibili.live.data.CMD.Companion.byCommand
+import ink.rubi.bilibili.live.data.Operation.Companion.byCode
+import ink.rubi.bilibili.live.data.Packet.Companion.createPacket
+import ink.rubi.bilibili.live.data.Version.Companion.byVersion
+import ink.rubi.bilibili.live.exception.UnknownProtocolTypeException
+import ink.rubi.bilibili.live.objectMapper
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.WebSocketSession
 import java.nio.ByteBuffer
@@ -14,12 +15,24 @@ const val heartBeatContent = "[object Object]"
 
 object Packets {
     val heartBeatPacket = createPacket(
-        PacketHead(Version.WS_BODY_PROTOCOL_VERSION_INT, Operation.HEARTBEAT),
+        PacketHead(
+            Version.WS_BODY_PROTOCOL_VERSION_INT,
+            Operation.HEARTBEAT
+        ),
         ByteBuffer.wrap(heartBeatContent.toByteArray())
     )
     val authPacket = fun(uid: Int, roomId: Int) = createPacket(
-        PacketHead(Version.WS_BODY_PROTOCOL_VERSION_INT, Operation.AUTH),
-        ByteBuffer.wrap(objectMapper.writeValueAsString(AuthInfo(uid, roomId))!!.toByteArray())
+        PacketHead(
+            Version.WS_BODY_PROTOCOL_VERSION_INT,
+            Operation.AUTH
+        ),
+        ByteBuffer.wrap(
+            objectMapper.writeValueAsString(
+                AuthInfo(
+                    uid,
+                    roomId
+                )
+            )!!.toByteArray())
     )
 }
 
@@ -95,12 +108,12 @@ data class PacketHead(
 
 internal suspend inline fun WebSocketSession.sendPacket(packet: Packet) = send(packet.toFrame())
 
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class NormalResponse<T>(
     val code: Int,
-    val msg: String,
-    val message: String,
-    val `data`: T
+    val msg: String?,
+    val status: Boolean?,
+    val `data`: T?
 )
 
 data class WebTitle(
@@ -292,11 +305,11 @@ enum class CMD(val desc: String) {
 }
 
 fun searchCMD(cmd: String, throwIfNotFound: Boolean = false) = byCommand[cmd]
-    ?: if (throwIfNotFound) throw UnknownException("unknown cmd : $cmd") else CMD.UNKNOWN
+    ?: if (throwIfNotFound) throw UnknownProtocolTypeException("unknown cmd : $cmd") else CMD.UNKNOWN
 
 fun searchOperation(operation: Int, throwIfNotFound: Boolean = false) = byCode[operation]
-    ?: if (throwIfNotFound) throw UnknownException("unknown operation : $operation") else Operation.UNKNOWN
+    ?: if (throwIfNotFound) throw UnknownProtocolTypeException("unknown operation : $operation") else Operation.UNKNOWN
 
 fun searchVersion(version: Short, throwIfNotFound: Boolean = false) = byVersion[version]
-    ?: if (throwIfNotFound) throw UnknownException("unknown version : $version") else Version.UNKNOWN
+    ?: if (throwIfNotFound) throw UnknownProtocolTypeException("unknown version : $version") else Version.UNKNOWN
 

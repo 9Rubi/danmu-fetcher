@@ -1,4 +1,4 @@
-package ink.rubi.bilibili.live.danmu.data
+package ink.rubi.bilibili.live.data
 
 data class Gift(
     val action: String,

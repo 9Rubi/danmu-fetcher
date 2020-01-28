@@ -1,17 +1,23 @@
-package ink.rubi.bilibili.live.danmu
+package ink.rubi.bilibili.live
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import ink.rubi.bilibili.live.api.DEFAULT_DANMU_HOST
+import ink.rubi.bilibili.live.api.getLoadBalancedWsHostServerAsync
+import ink.rubi.bilibili.live.api.getRealRoomIdAsync
+import ink.rubi.bilibili.live.api.getWebTitlesAsync
 import ink.rubi.bilibili.live.danmu.data.*
-import ink.rubi.bilibili.live.danmu.data.Operation.*
-import ink.rubi.bilibili.live.danmu.handler.EventHandler
-import ink.rubi.bilibili.live.danmu.handler.EventType.*
-import ink.rubi.bilibili.live.danmu.handler.MessageHandler
-import ink.rubi.bilibili.live.danmu.handler.simpleEventHandler
-import ink.rubi.bilibili.live.danmu.handler.simpleMessageHandler
+import ink.rubi.bilibili.live.data.*
+import ink.rubi.bilibili.live.data.Operation.*
+import ink.rubi.bilibili.live.handler.EventHandler
+import ink.rubi.bilibili.live.handler.EventType.*
+import ink.rubi.bilibili.live.handler.MessageHandler
+import ink.rubi.bilibili.live.handler.simpleEventHandler
+import ink.rubi.bilibili.live.handler.simpleMessageHandler
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
+import io.ktor.client.features.cookies.HttpCookies
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.logging.LogLevel
@@ -44,6 +50,7 @@ val client = HttpClient(CIO) {
     install(Logging) {
         level = LogLevel.NONE
     }
+    install(HttpCookies)
     BrowserUserAgent()
 }
 
@@ -86,34 +93,44 @@ object DanmuListener {
         val titleWrap = client.getWebTitlesAsync()
         initData(realRoomId, hostServer, titleWrap)
         eventHandler.handle(CONNECT)
-        client.wss(
-            host = if (loadBalance) hostServer.getCompleted().host else DEFAULT_DANMU_HOST,
-            port = if (loadBalance && hostServer.getCompleted().host != DEFAULT_DANMU_HOST)
-                hostServer.getCompleted().wss_port else DEFAULT_PORT,
-            path = "/sub"
+        try {
+            client.wss(
+                host = if (loadBalance) hostServer.getCompleted().host else DEFAULT_DANMU_HOST,
+                port = if (loadBalance && hostServer.getCompleted().host != DEFAULT_DANMU_HOST)
+                    hostServer.getCompleted().wss_port else DEFAULT_PORT,
+                path = "/sub"
 
-        ) {
-            eventHandler.handle(CONNECTED)
-            launch(this@connectLiveRoom.coroutineContext) {
-                while (true)
-                    decode(incoming.receive().buffer, messageHandler, eventHandler)
-            }
-            eventHandler.handle(LOGIN)
-            sendPacket(Packets.authPacket(uid, realRoomId.getCompleted()))
-            launch {
-                closeReason.await()?.let {
-                    with(it) {
-                        println("code:$code")
-                        println("message:$message")
-                        println("reason:$knownReason")
+            ) {
+                eventHandler.handle(CONNECTED)
+                launch(this@connectLiveRoom.coroutineContext) {
+                    while (true)
+                        decode(
+                            incoming.receive().buffer,
+                            messageHandler,
+                            eventHandler
+                        )
+                }
+                eventHandler.handle(LOGIN)
+                sendPacket(Packets.authPacket(uid, realRoomId.getCompleted()))
+                launch {
+                    closeReason.await()?.let {
+                        with(it) {
+                            log.info("code:$code")
+                            log.info("message:$message")
+                            log.info("reason:$knownReason")
+                        }
                     }
                 }
+
+                while (true) {
+                    sendPacket(Packets.heartBeatPacket)
+                    delay(30_000)
+                }
             }
-            while (true) {
-                sendPacket(Packets.heartBeatPacket)
-                delay(30_000)
-            }
+        } catch (e: Throwable) {
+            eventHandler.handle(DISCONNECT)
         }
+
     }
 
     private suspend fun initData(
@@ -144,7 +161,13 @@ object DanmuListener {
             }
             SEND_MSG_REPLY -> {
                 if (header.version == Version.WS_BODY_PROTOCOL_VERSION_DEFLATE) {
-                    decode(ByteBuffer.wrap(uncompressZlib(payload.array())), messageHandler, eventHandler)
+                    decode(
+                        ByteBuffer.wrap(
+                            uncompressZlib(
+                                payload.array()
+                            )
+                        ), messageHandler, eventHandler
+                    )
                     return
                 }
                 assert(header.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL)
@@ -155,7 +178,11 @@ object DanmuListener {
                     messageHandler.handle(message)
                 }
                 if (payload.hasRemaining())
-                    decode(payload, messageHandler, eventHandler)
+                    decode(
+                        payload,
+                        messageHandler,
+                        eventHandler
+                    )
             }
             else -> {
                 val operation = searchOperation(header.code.code)

@@ -1,4 +1,4 @@
-package ink.rubi.bilibili.live.danmu.handler
+package ink.rubi.bilibili.live.handler
 
 enum class EventType(val desc: String) {
     LOGIN("登录事件"),

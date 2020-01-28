@@ -1,5 +1,5 @@
-import ink.rubi.bilibili.live.danmu.DanmuListener.connectLiveRoom
-import ink.rubi.bilibili.live.danmu.handler.simpleMessageHandler
+import ink.rubi.bilibili.live.DanmuListener.connectLiveRoom
+import ink.rubi.bilibili.live.handler.simpleMessageHandler
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 

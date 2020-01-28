@@ -1,9 +1,9 @@
-package ink.rubi.bilibili.live.danmu.handler
+package ink.rubi.bilibili.live.handler
 
-import ink.rubi.bilibili.live.danmu.data.CMD.*
-import ink.rubi.bilibili.live.danmu.data.searchCMD
-import ink.rubi.bilibili.live.danmu.exception.MessageException
-import ink.rubi.bilibili.live.danmu.objectMapper
+import ink.rubi.bilibili.live.data.CMD.*
+import ink.rubi.bilibili.live.data.searchCMD
+import ink.rubi.bilibili.live.exception.MessageException
+import ink.rubi.bilibili.live.objectMapper
 
 interface SimpleMessageHandler : MessageHandler {
     fun onReceiveDanmu(block: (user: String, said: String) -> Unit)
@@ -84,7 +84,12 @@ class SimpleMessageHandlerImpl(
                 }
             }
         } catch (e: Throwable) {
-            error?.invoke(message, MessageException("catch an exception while handling a message : $message", e))
+            error?.invoke(message,
+                MessageException(
+                    "catch an exception while handling a message : $message",
+                    e
+                )
+            )
         }
     }
 }

@@ -1,4 +1,4 @@
-import ink.rubi.bilibili.live.danmu.DanmuListener.connectLiveRoom
+import ink.rubi.bilibili.live.DanmuListener.connectLiveRoom
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay

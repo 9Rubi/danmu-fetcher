@@ -1,6 +1,6 @@
-import ink.rubi.bilibili.live.danmu.DanmuListener.connectLiveRoom
-import ink.rubi.bilibili.live.danmu.handler.simpleEventHandler
-import ink.rubi.bilibili.live.danmu.handler.simpleMessageHandler
+import ink.rubi.bilibili.live.DanmuListener.connectLiveRoom
+import ink.rubi.bilibili.live.handler.simpleEventHandler
+import ink.rubi.bilibili.live.handler.simpleMessageHandler
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 object SimpleMessageHandlerTest {
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 115
+        val roomId = 92613
         val job = runBlocking {
             connectLiveRoom(roomId,
                 simpleMessageHandler {
