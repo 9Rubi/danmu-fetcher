@@ -2,11 +2,11 @@ package ink.rubi.bilibili.live
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import ink.rubi.bilibili.auth.api.getUidAsync
 import ink.rubi.bilibili.live.api.DEFAULT_DANMU_HOST
 import ink.rubi.bilibili.live.api.getLoadBalancedWsHostServerAsync
 import ink.rubi.bilibili.live.api.getRealRoomIdAsync
 import ink.rubi.bilibili.live.api.getWebTitlesAsync
-import ink.rubi.bilibili.live.danmu.data.*
 import ink.rubi.bilibili.live.data.*
 import ink.rubi.bilibili.live.data.Operation.*
 import ink.rubi.bilibili.live.handler.EventHandler
@@ -32,9 +32,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
 
-
-const val uid = 0
-
 var loadBalance = true
 val log: Logger = LoggerFactory.getLogger("[danmu-client]")
 val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
@@ -58,7 +55,8 @@ val client = HttpClient(CIO) {
 object DanmuListener {
     @KtorExperimentalAPI
     fun CoroutineScope.connectLiveRoom(
-        roomId: Int, // workersContext: CoroutineContext =  Executors.newFixedThreadPool(10).asCoroutineDispatcher(),
+        roomId: Int,
+        // workersContext: CoroutineContext =  Executors.newFixedThreadPool(10).asCoroutineDispatcher(),
         messageHandler: MessageHandler =
             simpleMessageHandler {
                 onReceiveDanmu { user, said ->
@@ -82,15 +80,18 @@ object DanmuListener {
             onLoginFail {
                 log.info("login failed!")
             }
+            onDisconnect {
+                log.info("disconnect!")
+            }
             onLogin {
                 log.info("login ...")
             }
-        }
-
+        }, anonymous: Boolean = true
     ) = launch {
         val realRoomId = client.getRealRoomIdAsync(roomId)
         val hostServer = client.getLoadBalancedWsHostServerAsync(roomId)
         val titleWrap = client.getWebTitlesAsync()
+        val uid = if (anonymous) 0 else client.getUidAsync().await()
         initData(realRoomId, hostServer, titleWrap)
         eventHandler.handle(CONNECT)
         try {
@@ -129,6 +130,7 @@ object DanmuListener {
             }
         } catch (e: Throwable) {
             eventHandler.handle(DISCONNECT)
+            log.error("disconnect from server cause : ",e)
         }
 
     }

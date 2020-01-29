@@ -9,6 +9,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(project(":danmu-fetcher"))
     implementation("ch.qos.logback:logback-classic:1.2.1")
+    implementation("com.google.zxing:javase:3.4.0")
 }
 
 //tasks.withType(Test::class.java) {

@@ -23,7 +23,7 @@ const val DEFAULT_DANMU_HOST    = "broadcastlv.chat.bilibili.com"
 
 fun HttpClient.getRealRoomIdAsync(roomId: Int): Deferred<Int> {
     return async {
-        this@getRealRoomIdAsync.get<NormalResponse<RoomInitInfo>>(
+        get<NormalResponse<RoomInitInfo>>(
             ROOM_INIT_URL
         ) {
             parameter("id", roomId)
@@ -33,7 +33,7 @@ fun HttpClient.getRealRoomIdAsync(roomId: Int): Deferred<Int> {
 
 fun HttpClient.getLoadBalancedWsHostServerAsync(roomId: Int): Deferred<HostServer> {
     return async {
-        this@getLoadBalancedWsHostServerAsync.get<NormalResponse<LoadBalanceInfo>>(
+        get<NormalResponse<LoadBalanceInfo>>(
             ROOM_LOAD_BALANCE_URL
         ) {
             parameter("room_id", roomId)
@@ -45,7 +45,7 @@ fun HttpClient.getLoadBalancedWsHostServerAsync(roomId: Int): Deferred<HostServe
 
 fun HttpClient.getWebTitlesAsync(): Deferred<List<WebTitle>> {
     return async {
-        this@getWebTitlesAsync.get<NormalResponse<List<WebTitle>>>(
+        get<NormalResponse<List<WebTitle>>>(
             WEB_TITLES
         ).data!!
     }
@@ -56,7 +56,7 @@ fun HttpClient.getWebTitlesAsync(): Deferred<List<WebTitle>> {
 fun HttpClient.sendNormalMessageAsync(message: String, roomId: Int): Deferred<HttpResponse> {
     return async {
         val csrf = cookies(BILIBILI_DOMAIN)["bili_jct"]!!.value
-        this@sendNormalMessageAsync.post<HttpResponse>(SEND_MESSAGE) {
+        post<HttpResponse>(SEND_MESSAGE) {
             parameter("color", 16777215)
             parameter("fontsize", 25)
             parameter("mode", 1)

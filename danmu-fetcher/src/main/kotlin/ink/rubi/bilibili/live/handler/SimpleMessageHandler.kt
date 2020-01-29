@@ -84,12 +84,7 @@ class SimpleMessageHandlerImpl(
                 }
             }
         } catch (e: Throwable) {
-            error?.invoke(message,
-                MessageException(
-                    "catch an exception while handling a message : $message",
-                    e
-                )
-            )
+            error?.invoke(message, MessageException("catch an exception while handling a message : $message", e))
         }
     }
 }
