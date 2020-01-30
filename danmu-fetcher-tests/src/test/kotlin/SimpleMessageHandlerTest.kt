@@ -1,4 +1,4 @@
-import ink.rubi.bilibili.live.DanmuListener.connectLiveRoom
+import ink.rubi.bilibili.live.connectLiveRoom
 import ink.rubi.bilibili.live.handler.simpleEventHandler
 import ink.rubi.bilibili.live.handler.simpleMessageHandler
 import io.ktor.util.KtorExperimentalAPI

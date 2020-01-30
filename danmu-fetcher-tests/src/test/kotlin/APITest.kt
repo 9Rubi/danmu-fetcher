@@ -1,6 +1,6 @@
 import ink.rubi.bilibili.auth.api.login
-import ink.rubi.bilibili.live.DanmuListener.connectLiveRoom
 import ink.rubi.bilibili.live.api.sendNormalMessageAsync
+import ink.rubi.bilibili.live.bilibiliLiveRoom
 import ink.rubi.bilibili.live.client
 import io.ktor.client.statement.readText
 import io.ktor.util.KtorExperimentalAPI
@@ -24,7 +24,7 @@ object APITest {
         userInfo?.let { println("登录成功 : ${it.uname}") }
         val pool = Executors.newFixedThreadPool(10)
         val job1 = pool.asCoroutineDispatcher()
-            .let { CoroutineScope(it).connectLiveRoom(958282, anonymous = false) }
+            .let { CoroutineScope(it).bilibiliLiveRoom(958282, anonymous = false) }
         val job2 = launch {
             while (true) {
                 val line = readLine()

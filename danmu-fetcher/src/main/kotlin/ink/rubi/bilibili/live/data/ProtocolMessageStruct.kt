@@ -36,11 +36,11 @@ object Packets {
     )
 }
 
-class Packet private constructor(private val _header: PacketHead, private val _payload: ByteBuffer) {
-    val header: PacketHead
-        get() = _header
-    val payload: ByteBuffer
-        get() = _payload
+class Packet private constructor(header: PacketHead,payload: ByteBuffer) {
+    var header: PacketHead = header
+        private set
+    var payload: ByteBuffer = payload
+        private set
 
     companion object {
         fun createPacket(header: PacketHead, payload: ByteBuffer): Packet {
@@ -99,8 +99,7 @@ class Packet private constructor(private val _header: PacketHead, private val _p
 data class PacketHead(
     val version: Version,
     val code: Operation,
-    val seq: Int = 1
-) {
+    val seq: Int = 1) {
     var packLength: Int = 0
     var headLength: Short = 16
 }
