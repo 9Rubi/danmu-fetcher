@@ -56,6 +56,7 @@ val client = HttpClient(CIO) {
     BrowserUserAgent()
 }
 
+@ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 fun CoroutineScope.connectLiveRoom(
     roomId: Int,
