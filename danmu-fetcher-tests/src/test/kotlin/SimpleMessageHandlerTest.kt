@@ -10,14 +10,14 @@ import kotlinx.coroutines.runBlocking
 object SimpleMessageHandlerTest {
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 92613
+        val roomId = 5486320
         val job = runBlocking {
             connectLiveRoom(roomId,
                 simpleMessageHandler {
                     onReceiveDanmu { user, said -> log.info("[$user] : $said") }
                     onReceiveGift { user, num, giftName -> log.info("[$user] 送出了 $num 个 [$giftName]") }
-                    onVipEnterInLiveRoom { log.info("[$it] 进入了直播间") }
-                    onGuardEnterInLiveRoom { log.info("[舰长][$it] 进入了直播间") }
+                    onVipEnterInLiveRoom { log.info("[$it] 进入了直播间!") }
+                    onGuardEnterInLiveRoom { log.info("[舰长][$it] 进入了直播间!") }
                     onUnknownTypeMessage { log.warn(it) }
 //                onAllTypeMessage { log.error(it) }
                 }, simpleEventHandler {

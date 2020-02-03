@@ -125,7 +125,6 @@ fun CoroutineScope.connectLiveRoom(
                     }
                 }
             }
-
             while (true) {
                 sendPacket(Packets.heartBeatPacket)
                 delay(30_000)

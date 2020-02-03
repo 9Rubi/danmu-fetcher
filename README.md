@@ -13,7 +13,7 @@
         <dependency>
           <groupId>ink.rubi</groupId>
           <artifactId>danmu-fetcher</artifactId>
-          <version>0.0.31</version>
+          <version>0.0.32</version>
         </dependency>
 <!--         日志实现 -->
     </dependencies>
@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies{
-    compile 'ink.rubi:danmu-fetcher:0.0.31'
+    compile 'ink.rubi:danmu-fetcher:0.0.32'
     compile 'ch.qos.logback:logback-classic:1.2.1'
 }
 ```

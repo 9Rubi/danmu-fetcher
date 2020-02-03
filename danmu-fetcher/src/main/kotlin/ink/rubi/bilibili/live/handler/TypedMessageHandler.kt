@@ -2,7 +2,6 @@ package ink.rubi.bilibili.live.handler
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.readValue
-import ink.rubi.bilibili.live.danmu.data.*
 import ink.rubi.bilibili.live.data.*
 import ink.rubi.bilibili.live.data.CMD.*
 import ink.rubi.bilibili.live.exception.MessageException
@@ -84,7 +83,13 @@ class TypedMessageHandlerImpl(
                     val info = json["info"]
                     val said = info[1].textValue()!!
                     val user = with(info[2]) {
-                        User(this[0].asInt(), this[1].asText())
+                        User(
+                            uid = this[0].asInt(),
+                            name = this[1].asText(),
+                            isAdmin = this[2].asBoolean(),//0,1
+                            isVip = this[3].asBoolean(),//0,1
+                            isAnnualVip = this[4].asBoolean() //0,1
+                        )
                     }
                     val badge = with(info[3]) {
                         if (this.isArray && (this as ArrayNode).size() == 0)
@@ -131,12 +136,14 @@ class TypedMessageHandlerImpl(
                     roomRankChange?.invoke(rank)
                 }
                 UNKNOWN -> {
-                    unknownTypeMessage?.invoke(message,cmd)
+                    unknownTypeMessage?.invoke(message, cmd)
                 }
-                else -> { }
+                else -> {
+                }
             }
         } catch (e: Throwable) {
-            error?.invoke(message,
+            error?.invoke(
+                message,
                 MessageException(
                     "catch an exception while handling a message : $message",
                     e
