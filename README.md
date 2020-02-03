@@ -22,7 +22,7 @@
 ```groovy
 repositories {
     maven {
-        url  "https://dl.bintray.com/9rubi/danmu-fetcher"
+        url  "https://dl.bintray.com/9rubi/for-fun"
     }
 }
 
