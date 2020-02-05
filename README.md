@@ -1,34 +1,15 @@
 ## 使用示例
 ```xml
-<project>
-    <repositories>
-        <repository>
-            <id>bintray-9rubi-for-fun</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/9rubi/for-fun</url>
-        </repository>
-    </repositories>
-    
-    <dependencies>
-        <dependency>
-          <groupId>ink.rubi</groupId>
-          <artifactId>danmu-fetcher</artifactId>
-          <version>0.0.32</version>
-        </dependency>
-<!--         日志实现 -->
-    </dependencies>
-</project>
+<dependency>
+    <groupId>ink.rubi</groupId>
+    <artifactId>danmu-fetcher</artifactId>
+    <version>0.0.32</version>
+</dependency>        
 ```
 ```groovy
-repositories {
-    maven {
-        url  "https://dl.bintray.com/9rubi/for-fun"
-    }
-}
-
 dependencies{
     compile 'ink.rubi:danmu-fetcher:0.0.32'
-    compile 'ch.qos.logback:logback-classic:1.2.1'
+    compile 'ch.qos.logback:logback-classic:1.2.1' // ..
 }
 ```
 
