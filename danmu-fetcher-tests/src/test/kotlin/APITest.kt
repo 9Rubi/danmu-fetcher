@@ -1,12 +1,11 @@
 import ink.rubi.bilibili.auth.api.login
-import ink.rubi.bilibili.live.api.sendNormalMessageAsync
+import ink.rubi.bilibili.live.api.getBagDataAsync
+import ink.rubi.bilibili.live.api.isSuccess
+import ink.rubi.bilibili.live.api.sendDanmuAsync
 import ink.rubi.bilibili.live.client
 import ink.rubi.bilibili.live.connectLiveRoom
-import io.ktor.client.statement.readText
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
-import java.awt.Toolkit
-import java.util.*
 import java.util.concurrent.Executors
 
 const val QRCODE_RESOLVE_BY_CLI = "https://cli.im/api/qrcode/code"
@@ -18,22 +17,29 @@ object APITest {
     @JvmStatic
     fun main(args: Array<String>) = runBlocking {
 
-        val userInfo = client.login{
+        val userInfo = client.login {
             println(qrcodeHtmlUrl(it))
         }
         userInfo?.let { println("登录成功 : ${it.uname}") }
+        val bagData = client.getBagDataAsync().await()
+        bagData.list.forEach(::println)
         val pool = Executors.newFixedThreadPool(10)
         val job1 = pool.asCoroutineDispatcher()
             .let { CoroutineScope(it).connectLiveRoom(958282, anonymous = false) }
+
         val job2 = launch {
             while (true) {
                 val line = readLine()
                 line?.let {
                     when (it) {
                         "quit" -> cancel()
+
                         else -> {
-                            if (it.isNotEmpty())
-                                println(client.sendNormalMessageAsync(it, 958282).await().readText())
+                            if (it.isNotEmpty()) {
+                                val response = client.sendDanmuAsync(it, 958282).await()
+                                println(if (!response.isSuccess()) response.message else "发送成功")
+                            }
+
                         }
                     }
                 }

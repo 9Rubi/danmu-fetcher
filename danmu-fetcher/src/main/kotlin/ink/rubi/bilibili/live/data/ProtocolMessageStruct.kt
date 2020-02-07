@@ -1,6 +1,5 @@
 package ink.rubi.bilibili.live.data
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import ink.rubi.bilibili.live.data.CMD.Companion.byCommand
 import ink.rubi.bilibili.live.data.Operation.Companion.byCode
 import ink.rubi.bilibili.live.data.Packet.Companion.createPacket
@@ -32,11 +31,12 @@ object Packets {
                     uid,
                     roomId
                 )
-            )!!.toByteArray())
+            )!!.toByteArray()
+        )
     )
 }
 
-class Packet private constructor(header: PacketHead,payload: ByteBuffer) {
+class Packet private constructor(header: PacketHead, payload: ByteBuffer) {
     var header: PacketHead = header
         private set
     var payload: ByteBuffer = payload
@@ -99,7 +99,8 @@ class Packet private constructor(header: PacketHead,payload: ByteBuffer) {
 data class PacketHead(
     val version: Version,
     val code: Operation,
-    val seq: Int = 1) {
+    val seq: Int = 1
+) {
     var packLength: Int = 0
     var headLength: Short = 16
 }
@@ -107,13 +108,6 @@ data class PacketHead(
 
 internal suspend inline fun WebSocketSession.sendPacket(packet: Packet) = send(packet.toFrame())
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class NormalResponse<T>(
-    val code: Int,
-    val msg: String?,
-    val status: Boolean?,
-    val `data`: T?
-)
 
 data class WebTitle(
     val colorful: Int,

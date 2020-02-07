@@ -26,7 +26,6 @@ object Test {
                                 if (user.isAnnualVip) "[年费老爷]" else "[老爷]"
                             else
                                 ""
-
                             val levelInfo = "[UL ${userLevel.level}]"
                             log.info("$vipInfo$badgeInfo$levelInfo${user.name} : $said")
                         }

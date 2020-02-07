@@ -1,25 +1,40 @@
 package ink.rubi.bilibili.live.api
 
 import ink.rubi.bilibili.common.api.BILIBILI_DOMAIN
+import ink.rubi.bilibili.common.data.NormalResponse
 import ink.rubi.bilibili.live.data.*
 import io.ktor.client.HttpClient
 import io.ktor.client.features.cookies.cookies
+import io.ktor.client.features.cookies.get
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
-import io.ktor.client.statement.HttpResponse
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlin.random.Random
-import io.ktor.client.features.cookies.get
 
 
-const val ROOM_INIT_URL         = "https://api.live.bilibili.com/room/v1/Room/room_init"
+const val ROOM_INIT_URL = "https://api.live.bilibili.com/room/v1/Room/room_init"
 const val ROOM_LOAD_BALANCE_URL = "https://api.live.bilibili.com/room/v1/Danmu/getConf"
-const val WEB_TITLES            = "https://api.live.bilibili.com/rc/v1/Title/webTitles"
-const val SEND_MESSAGE          = "https://api.live.bilibili.com/msg/send"
+const val WEB_TITLES = "https://api.live.bilibili.com/rc/v1/Title/webTitles"
+const val SEND_MESSAGE = "https://api.live.bilibili.com/msg/send"
+const val BAG_LIST = "https://api.live.bilibili.com/xlive/web-room/v1/gift/bag_list"
+const val DEFAULT_DANMU_HOST = "broadcastlv.chat.bilibili.com"
 
-const val DEFAULT_DANMU_HOST    = "broadcastlv.chat.bilibili.com"
+/**
+ * require cookies
+ */
+fun HttpClient.getBagDataAsync(roomId: Int? = null): Deferred<BagData> {
+    return async {
+        get<NormalResponse<BagData>>(
+            BAG_LIST
+        ) {
+            roomId?.run { parameter("room_id", roomId) }
+            parameter("t", System.currentTimeMillis())
+        }.data!!
+    }
+}
+
 
 fun HttpClient.getRealRoomIdAsync(roomId: Int): Deferred<Int> {
     return async {
@@ -52,11 +67,31 @@ fun HttpClient.getWebTitlesAsync(): Deferred<List<WebTitle>> {
 }
 
 
-
-fun HttpClient.sendNormalMessageAsync(message: String, roomId: Int): Deferred<HttpResponse> {
+/**
+ * I don't know what's in the `data` yet
+ *
+ * if success , response payload should be
+ *
+ * ```
+ * {"code":0,"data":[],"message":"","msg":""}
+ * ```
+ *
+ * there is some fail danmu sample
+ *
+ * ```
+ * {"code":-500,"message":"超出限制长度","msg":"超出限制长度"}
+ * {"code":0,"message":"内容非法","msg":"内容非法"}
+ * {"code":0,"message":"msg in 1s","msg":"msg in 1s"}
+ * {"code":0,"message":"msg repeat","msg":"msg repeat"}
+ * ```
+ *
+ *
+ * require cookies
+ */
+fun HttpClient.sendDanmuAsync(message: String, roomId: Int): Deferred<NormalResponse<Any>> {
     return async {
         val csrf = cookies(BILIBILI_DOMAIN)["bili_jct"]!!.value
-        post<HttpResponse>(SEND_MESSAGE) {
+        post<NormalResponse<Any>>(SEND_MESSAGE) {
             parameter("color", 16777215)
             parameter("fontsize", 25)
             parameter("mode", 1)
@@ -70,6 +105,9 @@ fun HttpClient.sendNormalMessageAsync(message: String, roomId: Int): Deferred<Ht
     }
 }
 
+fun NormalResponse<Any>.isSuccess(): Boolean {
+    return this.code == 0 && this.msg == "" && this.message == ""
+}
 
 
 data class GuardInfo(

@@ -87,3 +87,36 @@ data class ComboSend(
     val uid: Int,
     val uname: String
 )
+
+data class BagData(
+    val list: List<Bag>,
+    val time: Int
+)
+
+data class Bag(
+    val bag_id: Int,
+    val bind_room_text: String,
+    val bind_roomid: Int,
+    val card_gif: String,
+    val card_id: Int,
+    val card_image: String,
+    val card_record_id: Int,
+    val corner_color: String,
+    val corner_mark: String,
+    val count_map: List<CountMap>,
+    val expire_at: Int,
+    val gift_id: Int,
+    val gift_name: String,
+    val gift_num: Int,
+    val gift_type: Int,
+    val is_show_send: Boolean,
+    val type: Int
+)
+
+data class CountMap(
+    val num: Int,
+    val text: String
+)
+
+
+
