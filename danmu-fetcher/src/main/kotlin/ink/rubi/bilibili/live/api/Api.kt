@@ -1,7 +1,7 @@
 package ink.rubi.bilibili.live.api
 
 import ink.rubi.bilibili.common.api.BILIBILI_DOMAIN
-import ink.rubi.bilibili.common.data.NormalResponse
+import ink.rubi.bilibili.common.data.DataHolder
 import ink.rubi.bilibili.live.data.*
 import io.ktor.client.HttpClient
 import io.ktor.client.features.cookies.cookies
@@ -26,7 +26,7 @@ const val DEFAULT_DANMU_HOST = "broadcastlv.chat.bilibili.com"
  */
 fun HttpClient.getBagDataAsync(roomId: Int? = null): Deferred<BagData> {
     return async {
-        get<NormalResponse<BagData>>(
+        get<DataHolder<BagData>>(
             BAG_LIST
         ) {
             roomId?.run { parameter("room_id", roomId) }
@@ -38,7 +38,7 @@ fun HttpClient.getBagDataAsync(roomId: Int? = null): Deferred<BagData> {
 
 fun HttpClient.getRealRoomIdAsync(roomId: Int): Deferred<Int> {
     return async {
-        get<NormalResponse<RoomInitInfo>>(
+        get<DataHolder<RoomInitInfo>>(
             ROOM_INIT_URL
         ) {
             parameter("id", roomId)
@@ -48,7 +48,7 @@ fun HttpClient.getRealRoomIdAsync(roomId: Int): Deferred<Int> {
 
 fun HttpClient.getLoadBalancedWsHostServerAsync(roomId: Int): Deferred<HostServer> {
     return async {
-        get<NormalResponse<LoadBalanceInfo>>(
+        get<DataHolder<LoadBalanceInfo>>(
             ROOM_LOAD_BALANCE_URL
         ) {
             parameter("room_id", roomId)
@@ -60,7 +60,7 @@ fun HttpClient.getLoadBalancedWsHostServerAsync(roomId: Int): Deferred<HostServe
 
 fun HttpClient.getWebTitlesAsync(): Deferred<List<WebTitle>> {
     return async {
-        get<NormalResponse<List<WebTitle>>>(
+        get<DataHolder<List<WebTitle>>>(
             WEB_TITLES
         ).data!!
     }
@@ -88,10 +88,10 @@ fun HttpClient.getWebTitlesAsync(): Deferred<List<WebTitle>> {
  *
  * require cookies
  */
-fun HttpClient.sendDanmuAsync(message: String, roomId: Int): Deferred<NormalResponse<Any>> {
+fun HttpClient.sendDanmuAsync(message: String, roomId: Int): Deferred<DataHolder<Any>> {
     return async {
         val csrf = cookies(BILIBILI_DOMAIN)["bili_jct"]!!.value
-        post<NormalResponse<Any>>(SEND_MESSAGE) {
+        post<DataHolder<Any>>(SEND_MESSAGE) {
             parameter("color", 16777215)
             parameter("fontsize", 25)
             parameter("mode", 1)
@@ -105,7 +105,7 @@ fun HttpClient.sendDanmuAsync(message: String, roomId: Int): Deferred<NormalResp
     }
 }
 
-fun NormalResponse<Any>.isSuccess(): Boolean {
+fun DataHolder<Any>.isSuccess(): Boolean {
     return this.code == 0 && this.msg == "" && this.message == ""
 }
 

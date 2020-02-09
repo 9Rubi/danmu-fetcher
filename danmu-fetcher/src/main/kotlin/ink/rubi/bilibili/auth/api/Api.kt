@@ -7,7 +7,7 @@ import ink.rubi.bilibili.auth.data.SuccessScan
 import ink.rubi.bilibili.auth.data.UserInfo
 import ink.rubi.bilibili.auth.exception.AuthException
 import ink.rubi.bilibili.common.api.BILIBILI_DOMAIN
-import ink.rubi.bilibili.common.data.NormalResponse
+import ink.rubi.bilibili.common.data.DataHolder
 import ink.rubi.bilibili.live.objectMapper
 import io.ktor.client.HttpClient
 import io.ktor.client.features.cookies.cookies
@@ -25,7 +25,7 @@ const val USER_INFO_URL         = "https://account.bilibili.com/home/userInfo"
 
 fun HttpClient.getUserInfoAsync(): Deferred<UserInfo?> {
     return async {
-        get<NormalResponse<UserInfo>>(USER_INFO_URL).data
+        get<DataHolder<UserInfo>>(USER_INFO_URL).data
     }
 }
 
