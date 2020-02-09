@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 object SimpleMessageHandlerTest {
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 5486320
+        val roomId = readLine()!!.toInt()
         val job = runBlocking {
             connectLiveRoom(roomId,
                 simpleMessageHandler {

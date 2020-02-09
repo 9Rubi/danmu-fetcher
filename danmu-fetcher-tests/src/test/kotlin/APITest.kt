@@ -16,7 +16,7 @@ fun qrcodeHtmlUrl(url: String) = "$QRCODE_RESOLVE_BY_CLI?text=$url&mhid=40PDDFm8
 object APITest {
     @JvmStatic
     fun main(args: Array<String>) = runBlocking {
-
+        val roomId = readLine()!!.toInt()
         val userInfo = client.login {
             println(qrcodeHtmlUrl(it))
         }
@@ -25,7 +25,7 @@ object APITest {
         bagData.list.forEach(::println)
         val pool = Executors.newFixedThreadPool(10)
         val job1 = pool.asCoroutineDispatcher()
-            .let { CoroutineScope(it).connectLiveRoom(958282, anonymous = false) }
+            .let { CoroutineScope(it).connectLiveRoom(roomId, anonymous = false) }
 
         val job2 = launch {
             while (true) {
@@ -36,7 +36,7 @@ object APITest {
 
                         else -> {
                             if (it.isNotEmpty()) {
-                                val response = client.sendDanmuAsync(it, 958282).await()
+                                val response = client.sendDanmuAsync(it, roomId).await()
                                 println(if (!response.isSuccess()) response.message else "发送成功")
                             }
 

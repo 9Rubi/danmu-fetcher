@@ -7,75 +7,90 @@ import ink.rubi.bilibili.live.data.CMD.*
 import ink.rubi.bilibili.live.exception.MessageException
 import ink.rubi.bilibili.live.objectMapper
 
+@DslMarker
+private annotation class Dsl
+
+@Dsl
 interface TypedMessageHandler : MessageHandler {
-    fun onReceiveDanmu(block: (user: User, badge: Badge?, userLevel: UserLevel, said: String) -> Unit)
-    fun onReceiveGift(block: (gift: Gift) -> Unit)
-    fun onVipEnterInLiveRoom(block: (user: String) -> Unit)
-    fun onGuardEnterInLiveRoom(block: (user: String) -> Unit)
-    fun onAllTypeMessage(block: (message: String) -> Unit)
-    fun onUnknownTypeMessage(block: (message: String, cmd: String) -> Unit)
-    fun onError(block: (message: String, e: MessageException) -> Unit)
-    fun onLive(block: (roomId: Int) -> Unit)
-    fun onPrepare(block: (roomId: Int) -> Unit)
-    fun onRoomRankChange(block: (rank: RoomRank) -> Unit)
+    fun onReceiveDanmu(context: OnReceiveDanmuContext.() -> Unit)
+    fun onReceiveGift(context: OnReceiveGiftContext.() -> Unit)
+    fun onVipEnterInLiveRoom(context: OnVipEnterInLiveRoomContext.() -> Unit)
+    fun onGuardEnterInLiveRoom(context: OnGuardEnterInLiveRoomContext.() -> Unit)
+    fun onAllTypeMessage(context: OnAllTypeMessageContext.() -> Unit)
+    fun onUnknownTypeMessage(context: OnUnknownTypeMessageContext.() -> Unit)
+    fun onError(context: OnErrorContext.() -> Unit)
+    fun onLive(context: OnLiveContext.() -> Unit)
+    fun onPrepare(context: OnPrepareContext.() -> Unit)
+    fun onRoomRankChange(context: OnRoomRankChangeContext.() -> Unit)
 }
 
+@Dsl data class OnReceiveDanmuContext(val user: User, val badge: Badge?, val userLevel: UserLevel, val said: String)
+@Dsl data class OnReceiveGiftContext(val gift: Gift)
+@Dsl data class OnVipEnterInLiveRoomContext(val user: String)
+@Dsl data class OnGuardEnterInLiveRoomContext(val user: String)
+@Dsl data class OnAllTypeMessageContext(val message: String)
+@Dsl data class OnUnknownTypeMessageContext(val message: String,val cmd: String)
+@Dsl data class OnErrorContext(val message: String,val e: MessageException)
+@Dsl data class OnLiveContext(val roomId: Int)
+@Dsl data class OnPrepareContext(val roomId: Int)
+@Dsl data class OnRoomRankChangeContext(val rank: RoomRank)
+
 class TypedMessageHandlerImpl(
-    private var receiveDanmu: ((user: User, badge: Badge?, userLevel: UserLevel, said: String) -> Unit)? = null,
-    private var receiveGift: ((gift: Gift) -> Unit)? = null,
-    private var vipEnterInLiveRoom: ((user: String) -> Unit)? = null,
-    private var guardEnterInLiveRoom: ((user: String) -> Unit)? = null,
-    private var allTypeMessage: ((message: String) -> Unit)? = null,
-    private var unknownTypeMessage: ((message: String, cmd: String) -> Unit)? = null,
-    private var error: ((message: String, e: MessageException) -> Unit)? = null,
-    private var live: ((roomId: Int) -> Unit)? = null,
-    private var prepare: ((roomId: Int) -> Unit)? = null,
-    private var roomRankChange: ((rank: RoomRank) -> Unit)? = null
+    private var receiveDanmu: (OnReceiveDanmuContext.() -> Unit)?=null,
+    private var receiveGift: (OnReceiveGiftContext.() -> Unit)? = null,
+    private var vipEnterInLiveRoom: (OnVipEnterInLiveRoomContext.() -> Unit)? = null,
+    private var guardEnterInLiveRoom: (OnGuardEnterInLiveRoomContext.() -> Unit)? = null,
+    private var allTypeMessage: (OnAllTypeMessageContext.() -> Unit)? = null,
+    private var unknownTypeMessage: (OnUnknownTypeMessageContext.() -> Unit)? = null,
+    private var error: (OnErrorContext.() -> Unit)? = null,
+    private var live: (OnLiveContext.() -> Unit)? = null,
+    private var prepare: (OnPrepareContext.() -> Unit)? = null,
+    private var roomRankChange: (OnRoomRankChangeContext.() -> Unit)? = null
 ) : TypedMessageHandler {
 
-    override fun onReceiveDanmu(block: (user: User, badge: Badge?, userLevel: UserLevel, said: String) -> Unit) {
-        receiveDanmu = block
+    override fun onReceiveDanmu(context: OnReceiveDanmuContext.() -> Unit) {
+        receiveDanmu = context
     }
 
-    override fun onReceiveGift(block: (gift: Gift) -> Unit) {
-        receiveGift = block
+    override fun onReceiveGift(context: OnReceiveGiftContext.() -> Unit) {
+        receiveGift = context
     }
 
-    override fun onVipEnterInLiveRoom(block: (user: String) -> Unit) {
-        vipEnterInLiveRoom = block
+    override fun onVipEnterInLiveRoom(context: OnVipEnterInLiveRoomContext.() -> Unit) {
+        vipEnterInLiveRoom = context
     }
 
-    override fun onGuardEnterInLiveRoom(block: (user: String) -> Unit) {
-        guardEnterInLiveRoom = block
+    override fun onGuardEnterInLiveRoom(context: OnGuardEnterInLiveRoomContext.() -> Unit) {
+       guardEnterInLiveRoom = context
     }
 
-    override fun onAllTypeMessage(block: (message: String) -> Unit) {
-        allTypeMessage = block
+    override fun onAllTypeMessage(context: OnAllTypeMessageContext.() -> Unit) {
+        allTypeMessage = context
     }
 
-    override fun onUnknownTypeMessage(block: ((message: String, cmd: String) -> Unit)) {
-        unknownTypeMessage = block
+    override fun onUnknownTypeMessage(context: OnUnknownTypeMessageContext.() -> Unit) {
+        unknownTypeMessage = context
     }
 
-    override fun onError(block: (message: String, e: MessageException) -> Unit) {
-        error = block
+    override fun onError(context: OnErrorContext.() -> Unit) {
+        error = context
     }
 
-    override fun onLive(block: (roomId: Int) -> Unit) {
-        live = block
+    override fun onLive(context: OnLiveContext.() -> Unit) {
+        live = context
     }
 
-    override fun onPrepare(block: (roomId: Int) -> Unit) {
-        prepare = block
+    override fun onPrepare(context: OnPrepareContext.() -> Unit) {
+        prepare = context
     }
 
-    override fun onRoomRankChange(block: (rank: RoomRank) -> Unit) {
-        roomRankChange = block
+    override fun onRoomRankChange(context: OnRoomRankChangeContext.() -> Unit) {
+        roomRankChange =  context
     }
 
     override fun handle(message: String) {
         try {
-            allTypeMessage?.invoke(message)
+            allTypeMessage?.invoke(OnAllTypeMessageContext(message))
             val json = objectMapper.readTree(message)
             val cmd = json["cmd"]?.textValue() ?: throw Exception("unexpect json format, missing [cmd] !")
             when (searchCMD(cmd)) {
@@ -109,48 +124,42 @@ class TypedMessageHandlerImpl(
                             this[3].asText()
                         )
                     }
-                    receiveDanmu?.invoke(user, badge, userLevel, said)
+                    receiveDanmu?.invoke(OnReceiveDanmuContext(user, badge, userLevel, said))
                 }
                 SEND_GIFT -> {
                     val gift = objectMapper.readValue<Gift>(json["data"].toString())
-                    receiveGift?.invoke(gift)
+                    receiveGift?.invoke(OnReceiveGiftContext(gift))
                 }
                 WELCOME -> {
                     val user = json["data"]["uname"].textValue()!!
-                    vipEnterInLiveRoom?.invoke(user)
+                    vipEnterInLiveRoom?.invoke(OnVipEnterInLiveRoomContext(user))
                 }
                 WELCOME_GUARD -> {
                     val user = json["data"]["username"].textValue()!!
-                    guardEnterInLiveRoom?.invoke(user)
+                    guardEnterInLiveRoom?.invoke(OnGuardEnterInLiveRoomContext(user))
                 }
                 LIVE -> {
                     val roomId = json["roomid"].asInt()
-                    live?.invoke(roomId)
+                    live?.invoke(OnLiveContext(roomId))
                 }
                 PREPARING -> {
                     val roomId = json["roomid"].asInt()
-                    prepare?.invoke(roomId)
+                    prepare?.invoke(OnPrepareContext(roomId))
                 }
                 ROOM_RANK -> {
                     val rank = objectMapper.readValue<RoomRank>(json["data"].toString())
-                    roomRankChange?.invoke(rank)
+                    roomRankChange?.invoke(OnRoomRankChangeContext(rank))
                 }
                 UNKNOWN -> {
-                    unknownTypeMessage?.invoke(message, cmd)
+                    unknownTypeMessage?.invoke(OnUnknownTypeMessageContext(message, cmd))
                 }
                 else -> {
                 }
             }
         } catch (e: Throwable) {
-            error?.invoke(
-                message,
-                MessageException(
-                    "catch an exception while handling a message : $message",
-                    e
-                )
-            )
+            error?.invoke(OnErrorContext(message, MessageException("catch an exception while handling a message : $message", e)))
         }
     }
 }
 
-fun typedMessageHandler(content: TypedMessageHandler.() -> Unit) = TypedMessageHandlerImpl().apply(content)
+inline fun typedMessageHandler(content: TypedMessageHandler.() -> Unit) = TypedMessageHandlerImpl().apply(content)

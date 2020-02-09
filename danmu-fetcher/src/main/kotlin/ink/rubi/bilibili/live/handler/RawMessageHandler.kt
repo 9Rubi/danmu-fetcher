@@ -17,7 +17,7 @@ class RawMessageHandlerImpl(
     }
 }
 
-fun rawMessageHandler(content: RawMessageHandler.() -> Unit) = RawMessageHandlerImpl().apply(content)
+inline fun rawMessageHandler(content: RawMessageHandler.() -> Unit) = RawMessageHandlerImpl().apply(content)
 
 
 /*

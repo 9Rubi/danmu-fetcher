@@ -15,7 +15,7 @@ object VerySimpleTest {
     fun main(args: Array<String>) {
         val threadPool = Executors.newFixedThreadPool(10)
         val scope = CoroutineScope(context = threadPool.asCoroutineDispatcher())
-        val job = scope.launch { connectLiveRoom(115) }
+        val job = scope.launch { connectLiveRoom(readLine()!!.toInt()) }
         sleep(Duration.ofSeconds(10))
         job.cancel()
         threadPool.shutdown()

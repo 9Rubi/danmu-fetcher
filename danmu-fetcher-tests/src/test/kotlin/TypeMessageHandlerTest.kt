@@ -1,4 +1,5 @@
 import ink.rubi.bilibili.live.connectLiveRoom
+import ink.rubi.bilibili.live.handler.rawMessageHandler
 import ink.rubi.bilibili.live.handler.typedMessageHandler
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,36 +13,33 @@ object TypeMessageHandlerTest {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 115
+        val roomId = readLine()!!.toInt()
         runBlocking {
             val job = launch {
                 connectLiveRoom(roomId,
                     typedMessageHandler {
-                        onReceiveDanmu { user, badge, userLevel, said ->
+                        onReceiveDanmu {
                             log.info("user          : $user")
                             log.info("badge         : $badge")
                             log.info("userLevel     : $userLevel")
                             log.info("said          : $said")
                         }
-                        onReceiveGift { gift ->
+                        onReceiveGift {
                             log.info("user          : ${gift.uname}")
                             log.info("num           : ${gift.num}")
                             log.info("giftName      : ${gift.giftName}")
                         }
-                        onVipEnterInLiveRoom { log.info("[$it] 进入了直播间") }
-                        onGuardEnterInLiveRoom { log.info("[舰长][$it] 进入了直播间") }
-                        onUnknownTypeMessage { message, _ ->
-                            log.warn(message)
-                        }
-//                        onAllTypeMessage { log.error(it) }
-                        onLive { log.info("[$it] 开始直播") }
-                        onPrepare { log.info("[$it] 准备直播") }
+                        onVipEnterInLiveRoom { log.info("[$user] 进入了直播间") }
+                        onGuardEnterInLiveRoom { log.info("[舰长][$user] 进入了直播间") }
+                        onUnknownTypeMessage { log.warn(message) }
+                        onAllTypeMessage { log.error(message) }
+                        onLive { log.info("[${this.roomId}] 开始直播") }
+                        onPrepare { log.info("[${this.roomId}] 准备直播") }
                         onRoomRankChange {
-                            log.info("roomid        :${it.roomid}")
-                            log.info("room_rank     :${it.rank_desc}")
+                            log.info("roomid        :${rank.roomid}")
+                            log.info("room_rank     :${rank.rank_desc}")
                         }
-
-                        onError { _, e -> log.error("catch exception :", e) }
+                        onError { log.error("catch exception :", e) }
                     }
                 )
             }

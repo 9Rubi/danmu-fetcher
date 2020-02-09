@@ -12,7 +12,7 @@ object RawMessageHandlerTest {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val roomId = 308543
+        val roomId = readLine()!!.toInt()
         runBlocking {
             val job = launch {
                 connectLiveRoom(roomId, rawMessageHandler {

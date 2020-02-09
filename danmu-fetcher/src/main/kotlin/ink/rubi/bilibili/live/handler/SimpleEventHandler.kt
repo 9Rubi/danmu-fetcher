@@ -57,4 +57,4 @@ class SimpleEventHandlerImpl : SimpleEventHandler {
     }
 }
 
-fun simpleEventHandler(content: SimpleEventHandler.() -> Unit) = SimpleEventHandlerImpl().apply(content)
+inline fun simpleEventHandler(content: SimpleEventHandler.() -> Unit) = SimpleEventHandlerImpl().apply(content)
