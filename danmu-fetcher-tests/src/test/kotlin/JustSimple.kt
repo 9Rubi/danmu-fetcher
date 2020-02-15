@@ -7,8 +7,8 @@ import kotlinx.coroutines.runBlocking
 
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
-fun main() = runBlocking {
-    val job = launch { connectLiveRoom(readLine()!!.toInt()) }
-    delay(15_000)
-    job.cancel()
+fun main() {
+  runBlocking {
+      connectLiveRoom(readLine()!!.toInt())
+  }
 }

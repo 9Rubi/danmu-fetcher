@@ -8,7 +8,7 @@ import ink.rubi.bilibili.auth.data.UserInfo
 import ink.rubi.bilibili.auth.exception.AuthException
 import ink.rubi.bilibili.common.api.BILIBILI_DOMAIN
 import ink.rubi.bilibili.common.data.DataHolder
-import ink.rubi.bilibili.live.objectMapper
+import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
 import io.ktor.client.HttpClient
 import io.ktor.client.features.cookies.cookies
 import io.ktor.client.features.cookies.get

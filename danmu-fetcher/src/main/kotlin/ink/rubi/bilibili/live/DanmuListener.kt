@@ -3,6 +3,12 @@ package ink.rubi.bilibili.live
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import ink.rubi.bilibili.auth.api.getUidAsync
+import ink.rubi.bilibili.live.DanmuListenerContext.defaultClient
+import ink.rubi.bilibili.live.DanmuListenerContext.defaultEventHandler
+import ink.rubi.bilibili.live.DanmuListenerContext.defaultMessageHandler
+import ink.rubi.bilibili.live.DanmuListenerContext.loadBalance
+import ink.rubi.bilibili.live.DanmuListenerContext.log
+import ink.rubi.bilibili.live.DanmuListenerContext.titlesDatabase
 import ink.rubi.bilibili.live.api.DEFAULT_DANMU_HOST
 import ink.rubi.bilibili.live.api.getLoadBalancedWsHostServerAsync
 import ink.rubi.bilibili.live.api.getRealRoomIdAsync
@@ -34,43 +40,31 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.util.zip.InflaterOutputStream
 
-var loadBalance = true
-val log: Logger = LoggerFactory.getLogger("[danmu-client]")
-val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
-val titlesDatabase = mutableMapOf<String, WebTitle>()
-
 fun uncompressZlib(input: ByteArray): ByteArray =
     ByteArrayOutputStream().use { InflaterOutputStream(it).use { output -> output.write(input) }; return@use it.toByteArray() }
 
-@KtorExperimentalAPI
-val client = HttpClient(CIO) {
-    install(WebSockets)
-    install(JsonFeature) {
-        serializer = JacksonSerializer()
-        acceptContentTypes = acceptContentTypes + ContentType("text", "json")
-    }
-    install(Logging) {
-        level = LogLevel.NONE
-    }
-    install(HttpCookies)
-    BrowserUserAgent()
-}
-
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
-fun CoroutineScope.connectLiveRoom(
-    roomId: Int,
-    messageHandler: MessageHandler =
-        simpleMessageHandler {
-            onReceiveDanmu { user, said ->
-                log.info("[$user] : $said")
-            }
-            onReceiveGift { user, num, giftName ->
-                log.info("[$user] 送出了 $num 个 [$giftName]")
-            }
+object DanmuListenerContext {
+    var loadBalance = true
+    val log: Logger = LoggerFactory.getLogger("[danmu-client]")
+    val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
+    val titlesDatabase = mutableMapOf<String, WebTitle>()
+    @KtorExperimentalAPI
+    val defaultClient = HttpClient(CIO) {
+        install(WebSockets)
+        install(JsonFeature) {
+            serializer = JacksonSerializer()
+            acceptContentTypes = acceptContentTypes + ContentType("text", "json")
         }
-    ,
-    eventHandler: EventHandler = simpleEventHandler {
+        install(Logging) {
+            level = LogLevel.NONE
+        }
+        install(HttpCookies)
+        BrowserUserAgent()
+    }
+  /*  val simpleExceptionHandler = CoroutineExceptionHandler { context, throwable ->
+        log.info("catch exception:", throwable)
+    }*/
+    val defaultEventHandler = simpleEventHandler {
         onConnect {
             log.info("connect!")
         }
@@ -89,13 +83,34 @@ fun CoroutineScope.connectLiveRoom(
         onLogin {
             log.info("login ...")
         }
-    }, anonymous: Boolean = true
+    }
+    val defaultMessageHandler = simpleMessageHandler {
+        onReceiveDanmu { user, said ->
+            log.info("[$user] : $said")
+        }
+        onReceiveGift { user, num, giftName ->
+            log.info("[$user] 送出了 $num 个 [$giftName]")
+        }
+    }
+}
+
+@ExperimentalCoroutinesApi
+@KtorExperimentalAPI
+fun CoroutineScope.connectLiveRoom(
+    roomId: Int,
+    messageHandler: MessageHandler = defaultMessageHandler, eventHandler: EventHandler = defaultEventHandler,
+    anonymous: Boolean = true, client: HttpClient = defaultClient
 ) = launch {
     val realRoomId = client.getRealRoomIdAsync(roomId)
     val hostServer = client.getLoadBalancedWsHostServerAsync(roomId)
     val titleWrap = client.getWebTitlesAsync()
     val uid = if (anonymous) 0 else client.getUidAsync().await()
-    initData(realRoomId, hostServer, titleWrap)
+    try {
+        initData(realRoomId, hostServer, titleWrap)
+    } catch (e: Throwable) {
+        log.error("danmuji init exception :",e)
+        throw CancellationException("init error",e)
+    }
     eventHandler.handle(CONNECT)
     try {
         client.wss(
@@ -116,7 +131,7 @@ fun CoroutineScope.connectLiveRoom(
             }
             eventHandler.handle(LOGIN)
             sendPacket(Packets.authPacket(uid, realRoomId.getCompleted()))
-            launch {
+            launch(this@connectLiveRoom.coroutineContext) {
                 closeReason.await()?.let {
                     with(it) {
                         log.info("code:$code")
@@ -132,7 +147,7 @@ fun CoroutineScope.connectLiveRoom(
         }
     } catch (e: Throwable) {
         eventHandler.handle(DISCONNECT)
-        log.error("disconnect from server cause : ",e)
+        log.error("disconnect from server cause :", e)
     }
 
 }

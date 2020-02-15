@@ -1,11 +1,11 @@
 package ink.rubi.bilibili.live.data
 
+import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
 import ink.rubi.bilibili.live.data.CMD.Companion.byCommand
 import ink.rubi.bilibili.live.data.Operation.Companion.byCode
 import ink.rubi.bilibili.live.data.Packet.Companion.createPacket
 import ink.rubi.bilibili.live.data.Version.Companion.byVersion
 import ink.rubi.bilibili.live.exception.UnknownProtocolTypeException
-import ink.rubi.bilibili.live.objectMapper
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.WebSocketSession
 import java.nio.ByteBuffer

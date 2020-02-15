@@ -43,7 +43,7 @@ object TypeMessageHandlerTest {
                     }
                 )
             }
-            delay(60000)
+            delay(6000)
             job.cancel()
         }
     }

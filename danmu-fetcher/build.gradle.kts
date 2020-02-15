@@ -9,16 +9,10 @@ plugins {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    api("io.ktor:ktor-client-core:$ktor_version")
-    api("io.ktor:ktor-client-core-jvm:$ktor_version")
-    api("io.ktor:ktor-client-json-jvm:$ktor_version")
     api("io.ktor:ktor-client-jackson:$ktor_version")
-    implementation("io.ktor:ktor-client-logging-jvm:$ktor_version")
-    api("io.ktor:ktor-client-cio:$ktor_version")
-    api("io.ktor:ktor-websockets:$ktor_version")
-    api("io.ktor:ktor-client-websockets:$ktor_version")
     api("io.ktor:ktor-client-logging-jvm:$ktor_version")
+    api("io.ktor:ktor-client-cio:$ktor_version")
+    api("io.ktor:ktor-client-websockets:$ktor_version")
 }
 
 publishJar{
@@ -26,6 +20,8 @@ publishJar{
         artifactId = "danmu-fetcher"
     }
     bintray {
+        username = project.properties["bintrayUser"]?.toString() ?: System.getenv("BINTRAY_USER")
+        secretKey = project.properties["bintrayApiKey"]?.toString() ?: System.getenv("BINTRAY_API_KEY")
         repository = "for-fun"
         info {
             publish = false

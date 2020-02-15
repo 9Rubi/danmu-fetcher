@@ -3,12 +3,12 @@
 <dependency>
     <groupId>ink.rubi</groupId>
     <artifactId>danmu-fetcher</artifactId>
-    <version>0.0.32</version>
+    <version>0.0.33</version>
 </dependency>        
 ```
 ```groovy
 dependencies{
-    compile 'ink.rubi:danmu-fetcher:0.0.32'
+    compile 'ink.rubi:danmu-fetcher:0.0.33'
     compile 'ch.qos.logback:logback-classic:1.2.1' // ..
 }
 ```

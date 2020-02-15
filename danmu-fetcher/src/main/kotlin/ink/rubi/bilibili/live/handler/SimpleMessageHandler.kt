@@ -1,9 +1,9 @@
 package ink.rubi.bilibili.live.handler
 
+import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
 import ink.rubi.bilibili.live.data.CMD.*
 import ink.rubi.bilibili.live.data.searchCMD
 import ink.rubi.bilibili.live.exception.MessageException
-import ink.rubi.bilibili.live.objectMapper
 
 interface SimpleMessageHandler : MessageHandler {
     fun onReceiveDanmu(block: (user: String, said: String) -> Unit)

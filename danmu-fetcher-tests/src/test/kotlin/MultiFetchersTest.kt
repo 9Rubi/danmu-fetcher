@@ -26,7 +26,7 @@ object MultiFetchersTest {
                     }
                 })
             }
-//            delay(60000)
+//            delay(1000)
 //            job.cancel()
         }
     }

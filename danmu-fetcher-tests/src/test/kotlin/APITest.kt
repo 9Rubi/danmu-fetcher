@@ -1,8 +1,8 @@
 import ink.rubi.bilibili.auth.api.login
+import ink.rubi.bilibili.live.DanmuListenerContext.defaultClient
 import ink.rubi.bilibili.live.api.getBagDataAsync
 import ink.rubi.bilibili.live.api.isSuccess
 import ink.rubi.bilibili.live.api.sendDanmuAsync
-import ink.rubi.bilibili.live.client
 import ink.rubi.bilibili.live.connectLiveRoom
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
@@ -17,15 +17,16 @@ object APITest {
     @JvmStatic
     fun main(args: Array<String>) = runBlocking {
         val roomId = readLine()!!.toInt()
-        val userInfo = client.login {
+        val userInfo = defaultClient.login {
             println(qrcodeHtmlUrl(it))
         }
         userInfo?.let { println("登录成功 : ${it.uname}") }
-        val bagData = client.getBagDataAsync().await()
+        val bagData = defaultClient.getBagDataAsync().await()
         bagData.list.forEach(::println)
         val pool = Executors.newFixedThreadPool(10)
         val job1 = pool.asCoroutineDispatcher()
-            .let { CoroutineScope(it).connectLiveRoom(roomId, anonymous = false) }
+            .let { CoroutineScope(it).connectLiveRoom(roomId, anonymous = false ) }
+
 
         val job2 = launch {
             while (true) {
@@ -36,7 +37,7 @@ object APITest {
 
                         else -> {
                             if (it.isNotEmpty()) {
-                                val response = client.sendDanmuAsync(it, roomId).await()
+                                val response = defaultClient.sendDanmuAsync(it, roomId).await()
                                 println(if (!response.isSuccess()) response.message else "发送成功")
                             }
 

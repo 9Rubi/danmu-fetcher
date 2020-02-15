@@ -1,17 +1,15 @@
 import ink.rubi.bilibili.live.connectLiveRoom
 import ink.rubi.bilibili.live.handler.typedMessageHandler
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.*
 import java.util.concurrent.Executors
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 object Test {
     @JvmStatic
-    fun main(args: Array<String>) {
-        val roomId = 21809202
+    fun main(args: Array<String>): Unit = runBlocking {
+        val roomId = readLine()!!.toInt()
 
         val pool = Executors.newFixedThreadPool(10)
         val job1 = pool.asCoroutineDispatcher()
@@ -34,7 +32,7 @@ object Test {
                         }
                         onVipEnterInLiveRoom { log.info("[$user] 进入了直播间") }
                         onGuardEnterInLiveRoom { log.info("[舰长][$user] 进入了直播间") }
-                        onUnknownTypeMessage {  log.warn(message) }
+                        onUnknownTypeMessage { log.warn(message) }
 //                        onAllTypeMessage { log.error(it) }
                         onLive { log.info("[${this.roomId}] 开始直播") }
                         onPrepare { log.info("[${this.roomId}] 准备直播") }
@@ -46,6 +44,7 @@ object Test {
                     }
                 )
             }
+
     }
 
 

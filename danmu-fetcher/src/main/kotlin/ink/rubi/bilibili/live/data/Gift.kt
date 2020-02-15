@@ -1,5 +1,8 @@
 package ink.rubi.bilibili.live.data
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Gift(
     val action: String,
     val addFollow: Int,
@@ -61,7 +64,10 @@ data class Gift(
     /**
      * 用户名
      */
-    val uname: String
+    val uname: String,
+    val demarcation: Int?,
+    val combo_stay_time :Int?,
+    val combo_total_coin :Int?
 )
 
 data class BatchComboSend(

@@ -2,10 +2,10 @@ package ink.rubi.bilibili.live.handler
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.readValue
+import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
 import ink.rubi.bilibili.live.data.*
 import ink.rubi.bilibili.live.data.CMD.*
 import ink.rubi.bilibili.live.exception.MessageException
-import ink.rubi.bilibili.live.objectMapper
 
 @DslMarker
 private annotation class Dsl
@@ -157,7 +157,7 @@ class TypedMessageHandlerImpl(
                 }
             }
         } catch (e: Throwable) {
-            error?.invoke(OnErrorContext(message, MessageException("catch an exception while handling a message : $message", e)))
+            error?.invoke(OnErrorContext(message, MessageException("catch an exception while handling a message", e)))
         }
     }
 }

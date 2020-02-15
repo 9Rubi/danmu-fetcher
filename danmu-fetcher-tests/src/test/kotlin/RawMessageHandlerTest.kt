@@ -1,8 +1,9 @@
+import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
 import ink.rubi.bilibili.live.connectLiveRoom
 import ink.rubi.bilibili.live.handler.rawMessageHandler
-import ink.rubi.bilibili.live.objectMapper
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -26,8 +27,8 @@ object RawMessageHandlerTest {
                     }
                 })
             }
-//            delay(958282)
-//            job.cancel()
+            delay(10000)
+            job.cancel()
         }
     }
 }
