@@ -9,9 +9,7 @@ plugins {
 }
 
 dependencies {
-    compile("io.ktor:ktor-client-logging-jvm:$ktorVersion")
     compile("io.ktor:ktor-client-cio:$ktorVersion")
-    compile("io.ktor:ktor-client-json:$ktorVersion")
     compile("io.ktor:ktor-client-gson:$ktorVersion")
 }
 

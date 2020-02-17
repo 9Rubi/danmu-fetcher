@@ -63,8 +63,8 @@ data class Gift(
      */
     val uname: String,
     val demarcation: Int?,
-    val combo_stay_time :Int?,
-    val combo_total_coin :Int?
+    val combo_stay_time: Int?,
+    val combo_total_coin: Int?
 )
 
 data class BatchComboSend(

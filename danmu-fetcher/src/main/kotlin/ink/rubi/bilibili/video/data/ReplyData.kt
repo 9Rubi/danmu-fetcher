@@ -9,7 +9,7 @@ data class ReplyData(
     val hots: List<Hot>,
     val lottery_card: Any?,
     val mode: Int,
-    val notice:Any?,
+    val notice: Any?,
     val page: Page,
     val replies: List<Reply>,
     val show_bvid: Boolean,
@@ -18,12 +18,14 @@ data class ReplyData(
     val upper: Upper,
     val vote: Int
 )
+
 data class Page(
     val acount: Int,
     val count: Int,
     val num: Int,
     val size: Int
 )
+
 data class Config(
     val read_only: Boolean,
     val show_del_log: Boolean,
@@ -33,6 +35,7 @@ data class Config(
     val showfloor: Int,
     val showtopic: Int
 )
+
 data class Control(
     val answer_guide_android_url: String,
     val answer_guide_icon_url: String,
@@ -44,11 +47,13 @@ data class Control(
     val root_input_text: String,
     val web_selection: Boolean
 )
+
 data class Folder(
     val has_folded: Boolean,
     val is_folded: Boolean,
     val rule: String
 )
+
 data class Hot(
     val action: Int,
     val assist: Int,
@@ -76,6 +81,7 @@ data class Hot(
     val type: Int,
     val up_action: UpAction
 )
+
 data class Reply(
     val action: Int,
     val assist: Int,
@@ -103,6 +109,7 @@ data class Reply(
     val type: Int,
     val up_action: UpAction
 )
+
 data class Member(
     val DisplayRank: String,
     val avatar: String,
@@ -120,12 +127,14 @@ data class Member(
     val user_sailing: UserSailing?,
     val vip: Vip
 )
+
 data class LevelInfo(
     val current_exp: Int,
     val current_level: Int,
     val current_min: Int,
     val next_exp: Int
 )
+
 data class Nameplate(
     val condition: String,
     val image: String,
@@ -134,10 +143,12 @@ data class Nameplate(
     val name: String,
     val nid: Int
 )
+
 data class OfficialVerify(
     val desc: String,
     val type: Int
 )
+
 data class Pendant(
     val id: Int,
     val expire: Int,
@@ -147,11 +158,13 @@ data class Pendant(
     val jump_url: String?,
     val type: String?
 )
+
 data class UserSailing(
     val cardbg: Any?,
     val cardbg_with_focus: Any?,
     val pendant: Pendant?
 )
+
 data class Vip(
     val accessStatus: Int,
     val dueRemark: String,
@@ -162,6 +175,7 @@ data class Vip(
     val vipStatusWarn: String,
     val vipType: Int
 )
+
 data class Label(
     val path: String
 )
@@ -170,6 +184,7 @@ data class UpAction(
     val like: Boolean,
     val reply: Boolean
 )
+
 data class Content(
     val device: String,
     val emote: Map<String, Emote>?,
@@ -177,6 +192,7 @@ data class Content(
     val message: String,
     val plat: Int
 )
+
 data class Emote(
     val attr: Int,
     val id: Int,
@@ -188,12 +204,14 @@ data class Emote(
     val type: Int,
     val url: String
 )
+
 data class Meta(
     val label_color: String,
     val label_text: String,
     val label_url: String,
     val size: Int
 )
+
 data class Upper(
     val mid: Int,
     val top: Any?,
