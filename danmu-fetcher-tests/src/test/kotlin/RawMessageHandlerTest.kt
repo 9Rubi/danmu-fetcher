@@ -1,4 +1,3 @@
-import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
 import ink.rubi.bilibili.live.connectLiveRoom
 import ink.rubi.bilibili.live.handler.rawMessageHandler
 import io.ktor.util.KtorExperimentalAPI
@@ -19,11 +18,6 @@ object RawMessageHandlerTest {
                 connectLiveRoom(roomId, rawMessageHandler {
                     onMessage {
                         log.info("raw message:$it")
-                        val json = objectMapper.readTree(it)
-                        if (json["cmd"].asText() == "DANMU_MSG"){
-                            val userInfo =json["info"][2].toString()
-                            log.info("user info :$userInfo")
-                        }
                     }
                 })
             }

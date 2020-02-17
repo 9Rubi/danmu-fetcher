@@ -7,8 +7,8 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 import java.util.concurrent.Executors
 
-@KtorExperimentalAPI
 @ExperimentalCoroutinesApi
+@KtorExperimentalAPI
 object VerySimpleTest {
 
     @JvmStatic

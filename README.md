@@ -3,12 +3,12 @@
 <dependency>
     <groupId>ink.rubi</groupId>
     <artifactId>danmu-fetcher</artifactId>
-    <version>0.0.33</version>
+    <version>0.0.332</version>
 </dependency>        
 ```
 ```groovy
 dependencies{
-    compile 'ink.rubi:danmu-fetcher:0.0.33'
+    compile 'ink.rubi:danmu-fetcher:0.0.332'
     compile 'ch.qos.logback:logback-classic:1.2.1' // ..
 }
 ```
@@ -17,20 +17,18 @@ dependencies{
 
 ## use kotlin
 ```kotlin
-@KtorExperimentalAPI
 @ExperimentalCoroutinesApi
+@KtorExperimentalAPI
 fun main() = runBlocking {
-    val job = launch { connectLiveRoom(92613) }
-    delay(15_000)
-    job.cancel()
+    connectLiveRoom(readLine()!!.toInt())
+    Unit
 }
-
 ```
 
 ## use java
 ```java
     
-       ...还没写
+       //...还没写
 
 ```
 

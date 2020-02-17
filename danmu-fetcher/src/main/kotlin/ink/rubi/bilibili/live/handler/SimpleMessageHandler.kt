@@ -1,9 +1,11 @@
 package ink.rubi.bilibili.live.handler
 
-import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
+import com.google.gson.JsonParser
+import ink.rubi.bilibili.common.FetcherContext.gson
 import ink.rubi.bilibili.live.data.CMD.*
 import ink.rubi.bilibili.live.data.searchCMD
 import ink.rubi.bilibili.live.exception.MessageException
+import io.ktor.util.KtorExperimentalAPI
 
 interface SimpleMessageHandler : MessageHandler {
     fun onReceiveDanmu(block: (user: String, said: String) -> Unit)
@@ -15,6 +17,7 @@ interface SimpleMessageHandler : MessageHandler {
     fun onError(block: (message: String, e: MessageException) -> Unit)
 }
 
+@KtorExperimentalAPI
 class SimpleMessageHandlerImpl(
     private var receiveDanmu: ((user: String, said: String) -> Unit)? = null,
     private var receiveGift: ((user: String, num: Int, giftName: String) -> Unit)? = null,
@@ -55,26 +58,26 @@ class SimpleMessageHandlerImpl(
     override fun handle(message: String) {
         try {
             allTypeMessage?.invoke(message)
-            val json = objectMapper.readTree(message)
-            val cmd = json["cmd"]?.textValue() ?: throw Exception("unexpect json format, missing [cmd] !")
+            val json = JsonParser.parseString(message)
+            val cmd = json.asJsonObject["cmd"]?.asString ?: throw Exception("unexpect json format, missing [cmd] !")
             when (searchCMD(cmd)) {
                 DANMU_MSG -> {
-                    val said = json["info"][1].textValue()!!
-                    val user = json["info"][2][1].textValue()!!
+                    val said = json.asJsonObject["info"]!!.asJsonArray[1].asString
+                    val user = json.asJsonObject["info"]!!.asJsonArray[2].asJsonArray[1].asString
                     receiveDanmu?.invoke(user, said)
                 }
                 SEND_GIFT -> {
-                    val user = json["data"]["uname"].textValue()!!
-                    val num = json["data"]["num"].intValue()
-                    val giftName = json["data"]["giftName"].textValue()!!
+                    val user = json.asJsonObject["data"]!!.asJsonObject["uname"]!!.asString
+                    val num = json.asJsonObject["data"]!!.asJsonObject["num"]!!.asInt
+                    val giftName = json.asJsonObject["data"]!!.asJsonObject["giftName"]!!.asString
                     receiveGift?.invoke(user, num, giftName)
                 }
                 WELCOME -> {
-                    val user = json["data"]["uname"].textValue()!!
+                    val user = json.asJsonObject["data"]!!.asJsonObject["uname"]!!.asString
                     vipEnterInLiveRoom?.invoke(user)
                 }
                 WELCOME_GUARD -> {
-                    val user = json["data"]["username"].textValue()!!
+                    val user = json.asJsonObject["data"]!!.asJsonObject["username"]!!.asString
                     guardEnterInLiveRoom?.invoke(user)
                 }
                 UNKNOWN -> {
@@ -88,5 +91,5 @@ class SimpleMessageHandlerImpl(
         }
     }
 }
-
-inline fun simpleMessageHandler(content: SimpleMessageHandler.() -> Unit) = SimpleMessageHandlerImpl().apply(content)
+@KtorExperimentalAPI
+inline fun simpleMessageHandler(asString: SimpleMessageHandler.() -> Unit) = SimpleMessageHandlerImpl().apply(asString)

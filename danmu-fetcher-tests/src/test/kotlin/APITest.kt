@@ -1,5 +1,5 @@
 import ink.rubi.bilibili.auth.api.login
-import ink.rubi.bilibili.live.DanmuListenerContext.defaultClient
+import ink.rubi.bilibili.common.FetcherContext.defaultClient
 import ink.rubi.bilibili.live.api.getBagDataAsync
 import ink.rubi.bilibili.live.api.isSuccess
 import ink.rubi.bilibili.live.api.sendDanmuAsync

@@ -1,11 +1,12 @@
 package ink.rubi.bilibili.live.handler
 
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.module.kotlin.readValue
-import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
+import com.google.gson.JsonParser
 import ink.rubi.bilibili.live.data.*
 import ink.rubi.bilibili.live.data.CMD.*
 import ink.rubi.bilibili.live.exception.MessageException
+import io.ktor.util.KtorExperimentalAPI
+import ink.rubi.bilibili.common.FetcherContext.gson
+import ink.rubi.bilibili.common.fromJson
 
 @DslMarker
 private annotation class Dsl
@@ -24,19 +25,39 @@ interface TypedMessageHandler : MessageHandler {
     fun onRoomRankChange(context: OnRoomRankChangeContext.() -> Unit)
 }
 
-@Dsl data class OnReceiveDanmuContext(val user: User, val badge: Badge?, val userLevel: UserLevel, val said: String)
-@Dsl data class OnReceiveGiftContext(val gift: Gift)
-@Dsl data class OnVipEnterInLiveRoomContext(val user: String)
-@Dsl data class OnGuardEnterInLiveRoomContext(val user: String)
-@Dsl data class OnAllTypeMessageContext(val message: String)
-@Dsl data class OnUnknownTypeMessageContext(val message: String,val cmd: String)
-@Dsl data class OnErrorContext(val message: String,val e: MessageException)
-@Dsl data class OnLiveContext(val roomId: Int)
-@Dsl data class OnPrepareContext(val roomId: Int)
-@Dsl data class OnRoomRankChangeContext(val rank: RoomRank)
+@Dsl
+data class OnReceiveDanmuContext(val user: User, val badge: Badge?, val userLevel: UserLevel, val said: String)
 
+@Dsl
+data class OnReceiveGiftContext(val gift: Gift)
+
+@Dsl
+data class OnVipEnterInLiveRoomContext(val user: String)
+
+@Dsl
+data class OnGuardEnterInLiveRoomContext(val user: String)
+
+@Dsl
+data class OnAllTypeMessageContext(val message: String)
+
+@Dsl
+data class OnUnknownTypeMessageContext(val message: String, val cmd: String)
+
+@Dsl
+data class OnErrorContext(val message: String, val e: MessageException)
+
+@Dsl
+data class OnLiveContext(val roomId: Int)
+
+@Dsl
+data class OnPrepareContext(val roomId: Int)
+
+@Dsl
+data class OnRoomRankChangeContext(val rank: RoomRank)
+
+@KtorExperimentalAPI
 class TypedMessageHandlerImpl(
-    private var receiveDanmu: (OnReceiveDanmuContext.() -> Unit)?=null,
+    private var receiveDanmu: (OnReceiveDanmuContext.() -> Unit)? = null,
     private var receiveGift: (OnReceiveGiftContext.() -> Unit)? = null,
     private var vipEnterInLiveRoom: (OnVipEnterInLiveRoomContext.() -> Unit)? = null,
     private var guardEnterInLiveRoom: (OnGuardEnterInLiveRoomContext.() -> Unit)? = null,
@@ -61,7 +82,7 @@ class TypedMessageHandlerImpl(
     }
 
     override fun onGuardEnterInLiveRoom(context: OnGuardEnterInLiveRoomContext.() -> Unit) {
-       guardEnterInLiveRoom = context
+        guardEnterInLiveRoom = context
     }
 
     override fun onAllTypeMessage(context: OnAllTypeMessageContext.() -> Unit) {
@@ -85,69 +106,69 @@ class TypedMessageHandlerImpl(
     }
 
     override fun onRoomRankChange(context: OnRoomRankChangeContext.() -> Unit) {
-        roomRankChange =  context
+        roomRankChange = context
     }
 
     override fun handle(message: String) {
         try {
             allTypeMessage?.invoke(OnAllTypeMessageContext(message))
-            val json = objectMapper.readTree(message)
-            val cmd = json["cmd"]?.textValue() ?: throw Exception("unexpect json format, missing [cmd] !")
+            val json = JsonParser.parseString(message)!!
+            val cmd = json.asJsonObject["cmd"]?.asString ?: throw Exception("unexpect json format, missing [cmd] !")
             when (searchCMD(cmd)) {
                 DANMU_MSG -> {
-                    val info = json["info"]
-                    val said = info[1].textValue()!!
-                    val user = with(info[2]) {
+                    val info = json.asJsonObject["info"]!!
+                    val said = info.asJsonArray[1].asString
+                    val user = with(info.asJsonArray[2]) {
                         User(
-                            uid = this[0].asInt(),
-                            name = this[1].asText(),
-                            isAdmin = this[2].asBoolean(),//0,1
-                            isVip = this[3].asBoolean(),//0,1
-                            isAnnualVip = this[4].asBoolean() //0,1
+                            uid = asJsonArray[0].asInt,
+                            name = asJsonArray[1].asString,
+                            isAdmin = asJsonArray[2].asInt == 1,//0,1
+                            isVip = asJsonArray[3].asInt == 1,//0,1
+                            isAnnualVip = asJsonArray[4].asInt == 1 //0,1
                         )
                     }
-                    val badge = with(info[3]) {
-                        if (this.isArray && (this as ArrayNode).size() == 0)
+                    val badge = with(info.asJsonArray[3]) {
+                        if (isJsonNull || asJsonArray.size() == 0)
                             null
                         else
                             Badge(
-                                this[0].asInt(0),
-                                this[1].asText(null),
-                                this[2].asText(null),
-                                this[3].asInt(0)
+                                asJsonArray[0].let { it?.asInt ?: 0 },
+                                asJsonArray[1].let { it?.asString ?: "" },
+                                asJsonArray[2].let { it?.asString ?: "" },
+                                asJsonArray[3].let { it?.asInt ?: 0 }
                             )
                     }
-                    val userLevel = with(info[4]) {
+                    val userLevel = with(info.asJsonArray[4]) {
                         UserLevel(
-                            this[0].asInt(),
-                            this[2].asInt(),
-                            this[3].asText()
+                            asJsonArray[0].asInt,
+                            asJsonArray[2].asInt,
+                            asJsonArray[3].asString
                         )
                     }
                     receiveDanmu?.invoke(OnReceiveDanmuContext(user, badge, userLevel, said))
                 }
                 SEND_GIFT -> {
-                    val gift = objectMapper.readValue<Gift>(json["data"].toString())
+                    val gift = gson.fromJson<Gift>(json.asJsonObject["data"]!!.asString)
                     receiveGift?.invoke(OnReceiveGiftContext(gift))
                 }
                 WELCOME -> {
-                    val user = json["data"]["uname"].textValue()!!
+                    val user = json.asJsonObject["data"]!!.asJsonObject["uname"]!!.asString
                     vipEnterInLiveRoom?.invoke(OnVipEnterInLiveRoomContext(user))
                 }
                 WELCOME_GUARD -> {
-                    val user = json["data"]["username"].textValue()!!
+                    val user = json.asJsonObject["data"]!!.asJsonObject["username"]!!.asString
                     guardEnterInLiveRoom?.invoke(OnGuardEnterInLiveRoomContext(user))
                 }
                 LIVE -> {
-                    val roomId = json["roomid"].asInt()
+                    val roomId = json.asJsonObject["roomid"]!!.asInt
                     live?.invoke(OnLiveContext(roomId))
                 }
                 PREPARING -> {
-                    val roomId = json["roomid"].asInt()
+                    val roomId = json.asJsonObject["roomid"]!!.asInt
                     prepare?.invoke(OnPrepareContext(roomId))
                 }
                 ROOM_RANK -> {
-                    val rank = objectMapper.readValue<RoomRank>(json["data"].toString())
+                    val rank = gson.fromJson<RoomRank>(json.asJsonObject["data"]!!.toString())
                     roomRankChange?.invoke(OnRoomRankChangeContext(rank))
                 }
                 UNKNOWN -> {
@@ -162,4 +183,5 @@ class TypedMessageHandlerImpl(
     }
 }
 
-inline fun typedMessageHandler(content: TypedMessageHandler.() -> Unit) = TypedMessageHandlerImpl().apply(content)
+@KtorExperimentalAPI
+inline fun typedMessageHandler(asString: TypedMessageHandler.() -> Unit) = TypedMessageHandlerImpl().apply(asString)

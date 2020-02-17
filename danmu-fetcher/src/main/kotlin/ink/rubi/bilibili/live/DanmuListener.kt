@@ -1,14 +1,12 @@
 package ink.rubi.bilibili.live
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import ink.rubi.bilibili.auth.api.getUidAsync
-import ink.rubi.bilibili.live.DanmuListenerContext.defaultClient
-import ink.rubi.bilibili.live.DanmuListenerContext.defaultEventHandler
-import ink.rubi.bilibili.live.DanmuListenerContext.defaultMessageHandler
-import ink.rubi.bilibili.live.DanmuListenerContext.loadBalance
-import ink.rubi.bilibili.live.DanmuListenerContext.log
-import ink.rubi.bilibili.live.DanmuListenerContext.titlesDatabase
+import ink.rubi.bilibili.common.FetcherContext.defaultClient
+import ink.rubi.bilibili.common.FetcherContext.defaultEventHandler
+import ink.rubi.bilibili.common.FetcherContext.defaultMessageHandler
+import ink.rubi.bilibili.common.FetcherContext.loadBalance
+import ink.rubi.bilibili.common.FetcherContext.log
+import ink.rubi.bilibili.common.FetcherContext.titlesDatabase
 import ink.rubi.bilibili.live.api.DEFAULT_DANMU_HOST
 import ink.rubi.bilibili.live.api.getLoadBalancedWsHostServerAsync
 import ink.rubi.bilibili.live.api.getRealRoomIdAsync
@@ -18,81 +16,12 @@ import ink.rubi.bilibili.live.data.Operation.*
 import ink.rubi.bilibili.live.handler.EventHandler
 import ink.rubi.bilibili.live.handler.EventType.*
 import ink.rubi.bilibili.live.handler.MessageHandler
-import ink.rubi.bilibili.live.handler.simpleEventHandler
-import ink.rubi.bilibili.live.handler.simpleMessageHandler
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.features.BrowserUserAgent
-import io.ktor.client.features.cookies.HttpCookies
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.logging.LogLevel
-import io.ktor.client.features.logging.Logging
-import io.ktor.client.features.websocket.WebSockets
 import io.ktor.client.features.websocket.wss
-import io.ktor.http.ContentType
 import io.ktor.http.DEFAULT_PORT
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-import java.util.zip.InflaterOutputStream
-
-fun uncompressZlib(input: ByteArray): ByteArray =
-    ByteArrayOutputStream().use { InflaterOutputStream(it).use { output -> output.write(input) }; return@use it.toByteArray() }
-
-object DanmuListenerContext {
-    var loadBalance = true
-    val log: Logger = LoggerFactory.getLogger("[danmu-client]")
-    val objectMapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
-    val titlesDatabase = mutableMapOf<String, WebTitle>()
-    @KtorExperimentalAPI
-    val defaultClient = HttpClient(CIO) {
-        install(WebSockets)
-        install(JsonFeature) {
-            serializer = JacksonSerializer()
-            acceptContentTypes = acceptContentTypes + ContentType("text", "json")
-        }
-        install(Logging) {
-            level = LogLevel.NONE
-        }
-        install(HttpCookies)
-        BrowserUserAgent()
-    }
-  /*  val simpleExceptionHandler = CoroutineExceptionHandler { context, throwable ->
-        log.info("catch exception:", throwable)
-    }*/
-    val defaultEventHandler = simpleEventHandler {
-        onConnect {
-            log.info("connect!")
-        }
-        onConnected {
-            log.info("connected!")
-        }
-        onLoginSuccess {
-            log.info("login success!")
-        }
-        onLoginFail {
-            log.info("login failed!")
-        }
-        onDisconnect {
-            log.info("disconnect!")
-        }
-        onLogin {
-            log.info("login ...")
-        }
-    }
-    val defaultMessageHandler = simpleMessageHandler {
-        onReceiveDanmu { user, said ->
-            log.info("[$user] : $said")
-        }
-        onReceiveGift { user, num, giftName ->
-            log.info("[$user] 送出了 $num 个 [$giftName]")
-        }
-    }
-}
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
@@ -108,8 +37,8 @@ fun CoroutineScope.connectLiveRoom(
     try {
         initData(realRoomId, hostServer, titleWrap)
     } catch (e: Throwable) {
-        log.error("danmuji init exception :",e)
-        throw CancellationException("init error",e)
+        log.error("danmuji init exception :", e)
+        throw CancellationException("init error", e)
     }
     eventHandler.handle(CONNECT)
     try {
@@ -152,6 +81,7 @@ fun CoroutineScope.connectLiveRoom(
 
 }
 
+@KtorExperimentalAPI
 private suspend fun initData(
     realRoomId: Deferred<Int>,
     hostServer: Deferred<HostServer>,
@@ -163,6 +93,7 @@ private suspend fun initData(
     log.info("use server        : ${hostServer.await().host}")
 }
 
+@KtorExperimentalAPI
 private fun decode(
     buffer: ByteBuffer,
     messageHandler: MessageHandler,
@@ -189,7 +120,7 @@ private fun decode(
                 )
                 return
             }
-            assert(header.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL)
+            require(header.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL)
             val byteArray = ByteArray(header.packLength - header.headLength)
             payload.get(byteArray)
             byteArray.toString(Charsets.UTF_8).let { message ->

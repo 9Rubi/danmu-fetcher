@@ -1,8 +1,5 @@
 package ink.rubi.bilibili.live.data
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class Gift(
     val action: String,
     val addFollow: Int,

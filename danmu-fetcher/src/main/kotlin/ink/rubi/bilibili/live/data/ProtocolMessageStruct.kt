@@ -1,6 +1,6 @@
 package ink.rubi.bilibili.live.data
 
-import ink.rubi.bilibili.live.DanmuListenerContext.objectMapper
+import ink.rubi.bilibili.common.FetcherContext.gson
 import ink.rubi.bilibili.live.data.CMD.Companion.byCommand
 import ink.rubi.bilibili.live.data.Operation.Companion.byCode
 import ink.rubi.bilibili.live.data.Packet.Companion.createPacket
@@ -8,10 +8,12 @@ import ink.rubi.bilibili.live.data.Version.Companion.byVersion
 import ink.rubi.bilibili.live.exception.UnknownProtocolTypeException
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.WebSocketSession
+import io.ktor.util.KtorExperimentalAPI
 import java.nio.ByteBuffer
 
 const val heartBeatContent = "[object Object]"
 
+@KtorExperimentalAPI
 object Packets {
     val heartBeatPacket = createPacket(
         PacketHead(
@@ -26,12 +28,7 @@ object Packets {
             Operation.AUTH
         ),
         ByteBuffer.wrap(
-            objectMapper.writeValueAsString(
-                AuthInfo(
-                    uid,
-                    roomId
-                )
-            )!!.toByteArray()
+            gson.toJson(AuthInfo(uid, roomId)).toByteArray()
         )
     )
 }
@@ -107,7 +104,6 @@ data class PacketHead(
 
 
 internal suspend inline fun WebSocketSession.sendPacket(packet: Packet) = send(packet.toFrame())
-
 
 data class WebTitle(
     val colorful: Int,

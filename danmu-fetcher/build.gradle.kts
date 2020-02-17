@@ -1,18 +1,18 @@
 import tanvd.kosogor.proxy.*
 
-val logback_version: String by project
-val ktor_version: String by project
-val kotlin_version: String by project
+val ktorVersion: String by project
+val kotlinVersion: String by project
 
 plugins {
     kotlin("jvm") apply true
+    id("tanvd.kosogor") version "1.0.7" apply true
 }
 
 dependencies {
-    api("io.ktor:ktor-client-jackson:$ktor_version")
-    api("io.ktor:ktor-client-logging-jvm:$ktor_version")
-    api("io.ktor:ktor-client-cio:$ktor_version")
-    api("io.ktor:ktor-client-websockets:$ktor_version")
+    compile("io.ktor:ktor-client-logging-jvm:$ktorVersion")
+    compile("io.ktor:ktor-client-cio:$ktorVersion")
+    compile("io.ktor:ktor-client-json:$ktorVersion")
+    compile("io.ktor:ktor-client-gson:$ktorVersion")
 }
 
 publishJar{
@@ -20,8 +20,8 @@ publishJar{
         artifactId = "danmu-fetcher"
     }
     bintray {
-        username = project.properties["bintrayUser"]?.toString() ?: System.getenv("BINTRAY_USER")
-        secretKey = project.properties["bintrayApiKey"]?.toString() ?: System.getenv("BINTRAY_API_KEY")
+//        username = project.properties["bintrayUser"]?.toString() ?: System.getenv("BINTRAY_USER")
+//        secretKey = project.properties["bintrayApiKey"]?.toString() ?: System.getenv("BINTRAY_API_KEY")
         repository = "for-fun"
         info {
             publish = false

@@ -1,5 +1,6 @@
 package ink.rubi.bilibili.live.api
 
+import com.google.gson.JsonElement
 import ink.rubi.bilibili.common.api.BILIBILI_DOMAIN
 import ink.rubi.bilibili.common.data.DataHolder
 import ink.rubi.bilibili.live.data.*
@@ -88,10 +89,10 @@ fun HttpClient.getWebTitlesAsync(): Deferred<List<WebTitle>> {
  *
  * require cookies
  */
-fun HttpClient.sendDanmuAsync(message: String, roomId: Int): Deferred<DataHolder<Any>> {
+fun HttpClient.sendDanmuAsync(message: String, roomId: Int): Deferred<DataHolder<JsonElement>> {
     return async {
         val csrf = cookies(BILIBILI_DOMAIN)["bili_jct"]!!.value
-        post<DataHolder<Any>>(SEND_MESSAGE) {
+        post<DataHolder<JsonElement>>(SEND_MESSAGE) {
             parameter("color", 16777215)
             parameter("fontsize", 25)
             parameter("mode", 1)
@@ -105,7 +106,7 @@ fun HttpClient.sendDanmuAsync(message: String, roomId: Int): Deferred<DataHolder
     }
 }
 
-fun DataHolder<Any>.isSuccess(): Boolean {
+fun DataHolder<JsonElement>.isSuccess(): Boolean {
     return this.code == 0 && this.msg == "" && this.message == ""
 }
 
