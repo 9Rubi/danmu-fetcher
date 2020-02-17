@@ -6,3 +6,6 @@
 *.ipr
 *.iws
 
+
+danmu-fetcher/build/
+danmu-fetcher-tests/build/
