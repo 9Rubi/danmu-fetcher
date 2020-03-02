@@ -161,7 +161,7 @@ class TypedMessageHandlerImpl(
                     )
                 }
                 SEND_GIFT -> {
-                    val gift = useJson.fromJson<Gift>(json.asJsonObject["data"]!!.asString)
+                    val gift = useJson.fromJson<Gift>(json.asJsonObject["data"]!!.toString())
                     receiveGift?.invoke(OnReceiveGiftContext(gift))
                 }
                 WELCOME -> {
