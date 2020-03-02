@@ -2,8 +2,6 @@ package ink.rubi.bilibili.common
 
 import com.google.gson.GsonBuilder
 import ink.rubi.bilibili.live.data.WebTitle
-import ink.rubi.bilibili.live.handler.simpleEventHandler
-import ink.rubi.bilibili.live.handler.simpleMessageHandler
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.BrowserUserAgent
@@ -19,13 +17,10 @@ import org.slf4j.LoggerFactory
 
 @KtorExperimentalAPI
 object FetcherContext {
-    internal const val loadBalance = true
     internal val log: Logger = LoggerFactory.getLogger("[danmu-client]")
     internal val titlesDatabase = mutableMapOf<String, WebTitle>()
-    internal val gson = GsonBuilder().apply {
-
-    }.create()!!
-    val defaultClient = HttpClient(CIO) {
+    internal val gson = GsonBuilder().create()!!
+    fun defaultClient() = HttpClient(CIO) {
         install(WebSockets)
         install(HttpCookies)
         install(JsonFeature) {
@@ -33,33 +28,5 @@ object FetcherContext {
             acceptContentTypes = acceptContentTypes + ContentType("text", "json")
         }
         BrowserUserAgent()
-    }
-    internal val defaultEventHandler = simpleEventHandler {
-        onConnect {
-            log.info("connect!")
-        }
-        onConnected {
-            log.info("connected!")
-        }
-        onLoginSuccess {
-            log.info("login success!")
-        }
-        onLoginFail {
-            log.info("login failed!")
-        }
-        onDisconnect {
-            log.info("disconnect!")
-        }
-        onLogin {
-            log.info("login ...")
-        }
-    }
-    internal val defaultMessageHandler = simpleMessageHandler {
-        onReceiveDanmu { user, said ->
-            log.info("[$user] : $said")
-        }
-        onReceiveGift { user, num, giftName ->
-            log.info("[$user] 送出了 $num 个 [$giftName]")
-        }
     }
 }

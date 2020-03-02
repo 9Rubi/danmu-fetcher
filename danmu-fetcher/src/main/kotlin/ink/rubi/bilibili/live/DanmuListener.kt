@@ -2,9 +2,6 @@ package ink.rubi.bilibili.live
 
 import ink.rubi.bilibili.auth.api.getUidAsync
 import ink.rubi.bilibili.common.FetcherContext.defaultClient
-import ink.rubi.bilibili.common.FetcherContext.defaultEventHandler
-import ink.rubi.bilibili.common.FetcherContext.defaultMessageHandler
-import ink.rubi.bilibili.common.FetcherContext.loadBalance
 import ink.rubi.bilibili.common.FetcherContext.log
 import ink.rubi.bilibili.common.FetcherContext.titlesDatabase
 import ink.rubi.bilibili.live.api.DEFAULT_DANMU_HOST
@@ -27,8 +24,8 @@ import java.nio.ByteBuffer
 @KtorExperimentalAPI
 fun CoroutineScope.connectLiveRoom(
     roomId: Int,
-    messageHandler: MessageHandler = defaultMessageHandler, eventHandler: EventHandler = defaultEventHandler,
-    anonymous: Boolean = true, client: HttpClient = defaultClient
+    messageHandler: MessageHandler?, eventHandler: EventHandler?,
+    anonymous: Boolean = true, loadBalance: Boolean = true, client: HttpClient = defaultClient()
 ) = launch {
     val realRoomId = client.getRealRoomIdAsync(roomId)
     val hostServer = client.getLoadBalancedWsHostServerAsync(roomId)
@@ -40,7 +37,7 @@ fun CoroutineScope.connectLiveRoom(
         log.error("danmuji init exception :", e)
         throw CancellationException("init error", e)
     }
-    eventHandler.handle(CONNECT)
+    eventHandler?.handle(CONNECT)
     try {
         client.wss(
             host = if (loadBalance) hostServer.getCompleted().host else DEFAULT_DANMU_HOST,
@@ -49,18 +46,14 @@ fun CoroutineScope.connectLiveRoom(
             path = "/sub"
 
         ) {
-            eventHandler.handle(CONNECTED)
+            eventHandler?.handle(CONNECTED)
             launch(this@connectLiveRoom.coroutineContext) {
                 while (true)
-                    decode(
-                        incoming.receive().buffer,
-                        messageHandler,
-                        eventHandler
-                    )
+                    decode(incoming.receive().buffer, messageHandler, eventHandler)
             }
-            eventHandler.handle(LOGIN)
+            eventHandler?.handle(LOGIN)
             sendPacket(Packets.authPacket(uid, realRoomId.getCompleted()))
-            launch(this@connectLiveRoom.coroutineContext) {
+            launch {
                 closeReason.await()?.let {
                     with(it) {
                         log.info("code:$code")
@@ -75,7 +68,7 @@ fun CoroutineScope.connectLiveRoom(
             }
         }
     } catch (e: Throwable) {
-        eventHandler.handle(DISCONNECT)
+        eventHandler?.handle(DISCONNECT)
         log.error("disconnect from server cause :", e)
     }
 
@@ -96,8 +89,8 @@ private suspend fun initData(
 @KtorExperimentalAPI
 private fun decode(
     buffer: ByteBuffer,
-    messageHandler: MessageHandler,
-    eventHandler: EventHandler
+    messageHandler: MessageHandler?,
+    eventHandler: EventHandler?
 ) {
     val packet = Packet.resolve(buffer)
     val header = packet.header
@@ -106,18 +99,12 @@ private fun decode(
         HEARTBEAT_REPLY -> log.debug("heart beat packet")
         AUTH_REPLY -> {
             val message = payload.array().toString(Charsets.UTF_8)
-            eventHandler.handle(if (message == """{"code":0}""") LOGIN_SUCCESS else LOGIN_FAILED)
+            eventHandler?.handle(if (message == """{"code":0}""") LOGIN_SUCCESS else LOGIN_FAILED)
             log.info("response => $message")
         }
         SEND_MSG_REPLY -> {
             if (header.version == Version.WS_BODY_PROTOCOL_VERSION_DEFLATE) {
-                decode(
-                    ByteBuffer.wrap(
-                        uncompressZlib(
-                            payload.array()
-                        )
-                    ), messageHandler, eventHandler
-                )
+                decode(ByteBuffer.wrap(uncompressZlib(payload.array())), messageHandler, eventHandler)
                 return
             }
             require(header.version == Version.WS_BODY_PROTOCOL_VERSION_NORMAL)
@@ -125,14 +112,10 @@ private fun decode(
             payload.get(byteArray)
             byteArray.toString(Charsets.UTF_8).let { message ->
                 log.debug(message)
-                messageHandler.handle(message)
+                messageHandler?.handle(message)
             }
             if (payload.hasRemaining())
-                decode(
-                    payload,
-                    messageHandler,
-                    eventHandler
-                )
+                decode(payload, messageHandler, eventHandler)
         }
         else -> {
             val operation = searchOperation(header.code.code)

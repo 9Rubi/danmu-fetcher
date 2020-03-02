@@ -1,7 +1,6 @@
 package ink.rubi.bilibili.live.handler
 
 import com.google.gson.JsonParser
-import ink.rubi.bilibili.common.FetcherContext.gson
 import ink.rubi.bilibili.common.fromJson
 import ink.rubi.bilibili.live.data.*
 import ink.rubi.bilibili.live.data.CMD.*
@@ -145,19 +144,34 @@ class TypedMessageHandlerImpl(
                             asJsonArray[3].asString
                         )
                     }
-                    receiveDanmu?.invoke(OnReceiveDanmuContext(user, badge, userLevel, said))
+                    receiveDanmu?.invoke(
+                        OnReceiveDanmuContext(
+                            user,
+                            badge,
+                            userLevel,
+                            said
+                        )
+                    )
                 }
                 SEND_GIFT -> {
-                    val gift = gson.fromJson<Gift>(json.asJsonObject["data"]!!.asString)
+                    val gift = useJson.fromJson<Gift>(json.asJsonObject["data"]!!.asString)
                     receiveGift?.invoke(OnReceiveGiftContext(gift))
                 }
                 WELCOME -> {
                     val user = json.asJsonObject["data"]!!.asJsonObject["uname"]!!.asString
-                    vipEnterInLiveRoom?.invoke(OnVipEnterInLiveRoomContext(user))
+                    vipEnterInLiveRoom?.invoke(
+                        OnVipEnterInLiveRoomContext(
+                            user
+                        )
+                    )
                 }
                 WELCOME_GUARD -> {
                     val user = json.asJsonObject["data"]!!.asJsonObject["username"]!!.asString
-                    guardEnterInLiveRoom?.invoke(OnGuardEnterInLiveRoomContext(user))
+                    guardEnterInLiveRoom?.invoke(
+                        OnGuardEnterInLiveRoomContext(
+                            user
+                        )
+                    )
                 }
                 LIVE -> {
                     val roomId = json.asJsonObject["roomid"]!!.asInt
@@ -168,17 +182,31 @@ class TypedMessageHandlerImpl(
                     prepare?.invoke(OnPrepareContext(roomId))
                 }
                 ROOM_RANK -> {
-                    val rank = gson.fromJson<RoomRank>(json.asJsonObject["data"]!!.toString())
-                    roomRankChange?.invoke(OnRoomRankChangeContext(rank))
+                    val rank = useJson.fromJson<RoomRank>(json.asJsonObject["data"]!!.toString())
+                    roomRankChange?.invoke(
+                        OnRoomRankChangeContext(
+                            rank
+                        )
+                    )
                 }
                 UNKNOWN -> {
-                    unknownTypeMessage?.invoke(OnUnknownTypeMessageContext(message, cmd))
+                    unknownTypeMessage?.invoke(
+                        OnUnknownTypeMessageContext(
+                            message,
+                            cmd
+                        )
+                    )
                 }
                 else -> {
                 }
             }
         } catch (e: Throwable) {
-            error?.invoke(OnErrorContext(message, MessageException("catch an exception while handling a message", e)))
+            error?.invoke(
+                OnErrorContext(
+                    message,
+                    MessageException("catch an exception while handling a message", e)
+                )
+            )
         }
     }
 }

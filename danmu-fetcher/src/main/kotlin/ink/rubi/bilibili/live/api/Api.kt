@@ -6,13 +6,13 @@ import ink.rubi.bilibili.common.data.DataHolder
 import ink.rubi.bilibili.live.data.*
 import io.ktor.client.HttpClient
 import io.ktor.client.features.cookies.cookies
-import io.ktor.client.features.cookies.get
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlin.random.Random
+import io.ktor.client.features.cookies.get
 
 
 const val ROOM_INIT_URL = "https://api.live.bilibili.com/room/v1/Room/room_init"

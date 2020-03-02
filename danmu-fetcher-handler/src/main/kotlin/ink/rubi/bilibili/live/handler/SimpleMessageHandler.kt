@@ -92,4 +92,4 @@ class SimpleMessageHandlerImpl(
 }
 
 @KtorExperimentalAPI
-inline fun simpleMessageHandler(asString: SimpleMessageHandler.() -> Unit) = SimpleMessageHandlerImpl().apply(asString)
+inline fun simpleMessageHandler(content: SimpleMessageHandler.() -> Unit) = SimpleMessageHandlerImpl().apply(content)

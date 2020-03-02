@@ -17,6 +17,7 @@ object APITest {
     @JvmStatic
     fun main(args: Array<String>) = runBlocking {
         val roomId = readLine()!!.toInt()
+        val defaultClient = defaultClient()
         val userInfo = defaultClient.login {
             println(qrcodeHtmlUrl(it))
         }

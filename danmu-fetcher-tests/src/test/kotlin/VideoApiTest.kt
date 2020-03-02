@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 fun main(): Unit = runBlocking{
+    val defaultClient = defaultClient()
     println(defaultClient.getLiveStatusAsync(17996762).await())
     defaultClient.getReplyFromVideoAsync(87679483).await().replies.forEach {
         println("${it.member.uname} : ${it.content.message}")
